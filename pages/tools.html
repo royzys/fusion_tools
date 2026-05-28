@@ -385,6 +385,158 @@
         grid-template-columns: repeat(2, 1fr);
       }
     }
+
+    /* ---- Comparison Section ---- */
+    .compare-section {
+      margin-top: 32px;
+    }
+
+    .compare-section.hidden {
+      display: none;
+    }
+
+    .compare-section h3 {
+      font-family: "Noto Serif SC", Georgia, "Times New Roman", serif;
+      font-size: 1rem;
+      color: var(--heading);
+      margin-bottom: 12px;
+    }
+
+    .compare-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .compare-toolbar .record-count {
+      font-size: 0.82rem;
+      color: var(--text-tertiary);
+      margin-left: auto;
+    }
+
+    .btn-compare {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 18px;
+      border: none;
+      border-radius: 6px;
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: 0.84rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-compare:hover {
+      transform: scale(0.97);
+    }
+
+    .btn-compare.primary {
+      background: var(--tool-accent);
+      color: #fff;
+    }
+
+    .btn-compare.primary:hover {
+      background: var(--tool-accent-light);
+    }
+
+    .btn-compare.danger {
+      background: #e8d8d4;
+      color: #8a4a3a;
+    }
+
+    .btn-compare.danger:hover {
+      background: #ddc8c2;
+    }
+
+    /* Comparison table */
+    .compare-table-wrapper {
+      overflow-x: auto;
+      border: 1px solid var(--tool-border);
+      border-radius: var(--radius);
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .compare-table th {
+      background: var(--tool-accent-subtle);
+      color: var(--text);
+      padding: 7px 8px;
+      font-weight: 600;
+      border: 1px solid var(--tool-border);
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .compare-table th.param-col {
+      background: #e8e2d0;
+    }
+
+    .compare-table th.output-col {
+      background: #d4e2d0;
+    }
+
+    .compare-table th.action-col {
+      background: #e8d8d4;
+    }
+
+    .compare-table td {
+      padding: 6px 8px;
+      border: 1px solid var(--tool-border);
+      text-align: center;
+      font-family: "Noto Sans Mono", "Consolas", monospace;
+      font-size: 0.76rem;
+    }
+
+    .compare-table td.highlight-row {
+      background: #f5f8e8;
+    }
+
+    .compare-table tr:nth-child(even) td {
+      background: #fcfbf8;
+    }
+
+    .compare-table tr:nth-child(even) td.highlight-row {
+      background: #f0f4e0;
+    }
+
+    .compare-table tr:hover td {
+      background: var(--tool-accent-subtle) !important;
+    }
+
+    .compare-table .btn-del-record {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--text-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .compare-table .btn-del-record:hover {
+      background: #e8d8d4;
+      color: #c0392b;
+    }
+
+    .compare-empty {
+      text-align: center;
+      padding: 28px 20px;
+      color: var(--text-tertiary);
+      font-size: 0.84rem;
+      border: 1px dashed var(--tool-border);
+      border-radius: var(--radius);
+    }
   </style>
 </head>
 <body>
@@ -440,6 +592,13 @@
           <label class="tool-toggle" data-tool="lr">
             <input type="checkbox"> 拉莫尔半径
             <span class="tnum">ρ<sub>L</sub></span>
+          </label>
+
+          <div style="margin: 10px 0 6px; border-top: 1px solid var(--tool-border);"></div>
+
+          <label class="tool-toggle" data-tool="cmp">
+            <input type="checkbox"> 多组对比
+            <span class="tnum">⇄</span>
           </label>
         </div>
       </aside>
@@ -649,6 +808,27 @@
 
         </section>
 
+        <!-- === Comparison Section === -->
+        <section class="compare-section hidden" id="section-cmp">
+          <h3>多组对比</h3>
+          <div class="compare-toolbar">
+            <button class="btn-compare primary" onclick="recordSnapshot()">📝 记录当前结果</button>
+            <button class="btn-compare danger" onclick="clearAllRecords()">🗑 清空所有记录</button>
+            <span class="record-count" id="cmp-count">0 条记录</span>
+          </div>
+
+          <div class="compare-table-wrapper" id="cmp-table-wrapper">
+            <table class="compare-table" id="cmp-table">
+              <thead id="cmp-thead"></thead>
+              <tbody id="cmp-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="compare-empty" id="cmp-empty">
+            <span>📋</span><br>暂无记录。调整参数后点击「记录当前结果」录入数据。
+          </div>
+        </section>
+
         <div class="tools-footnote">
           <p>
             <strong>说明：</strong>
@@ -692,6 +872,10 @@
     He3: '³He²⁺',
     He4: 'α (⁴He²⁺)'
   };
+
+  /* ---- Comparison records storage ---- */
+  var CMP_LS_KEY = 'fusion-tools-compare';
+  var cmpRecords = [];
 
   /* ==================================================================
    *  Helpers
@@ -961,7 +1145,11 @@
     toggles.forEach(function(t) {
       var cb = t.querySelector('input[type="checkbox"]');
       var tool = t.getAttribute('data-tool');
-      var panel = document.getElementById('panel-' + tool);
+
+      // 'cmp' controls the comparison section (not a result panel)
+      var isCmp = (tool === 'cmp');
+      var panel = isCmp ? document.getElementById('section-cmp')
+                       : document.getElementById('panel-' + tool);
 
       function update() {
         var checked = cb.checked;
@@ -969,7 +1157,7 @@
           panel.classList.toggle('hidden', !checked);
         }
         t.classList.toggle('active', checked);
-        updatePlaceholder();
+        if (!isCmp) updatePlaceholder();
         saveToolState();
       }
 
@@ -983,7 +1171,7 @@
         }
       });
 
-      // Apply the restored state to the panel
+      // Apply the restored state to the panel/section
       update();
     });
   }
@@ -1000,10 +1188,214 @@
   }
 
   /* ==================================================================
+   *  Comparison: record / display / delete
+   * ================================================================ */
+  function loadRecords() {
+    try {
+      var saved = localStorage.getItem(CMP_LS_KEY);
+      if (saved) cmpRecords = JSON.parse(saved);
+      else cmpRecords = [];
+    } catch(e) { cmpRecords = []; }
+  }
+
+  function saveRecords() {
+    try { localStorage.setItem(CMP_LS_KEY, JSON.stringify(cmpRecords)); } catch(e) {}
+  }
+
+  function grabSnapshot() {
+    var labels = {
+      R: gv('p-R'), a: gv('p-a'), Bt: gv('p-Bt'), Ip: gv('p-Ip'),
+      ne: gv('p-ne'), Te: gv('p-Te'), Ti: gv('p-Ti'),
+      kappa: gv('p-kappa'), delta: gv('p-delta'), li: gv('p-li'),
+      Zeff: gv('p-Zeff'), ion: gs('p-ion')
+    };
+
+    // Collect which tools are checked now
+    var checkedTools = [];
+    document.querySelectorAll('.tool-toggle[data-tool]').forEach(function(t) {
+      var tool = t.getAttribute('data-tool');
+      if (tool !== 'cmp' && t.querySelector('input[type="checkbox"]').checked) {
+        checkedTools.push(tool);
+      }
+    });
+
+    // Grab key outputs from each tool's rendered output
+    var outputs = {};
+
+    // Helper: parse a rendered output value
+    function readOut(elId, labelMatch) {
+      var el = document.getElementById(elId);
+      if (!el) return null;
+      var rows = el.querySelectorAll('.output-row');
+      for (var i = 0; i < rows.length; i++) {
+        var lbl = rows[i].querySelector('.olabel');
+        if (lbl && lbl.textContent.indexOf(labelMatch) !== -1) {
+          var valSpan = rows[i].querySelector('.ovalue');
+          if (valSpan) return valSpan.textContent.trim();
+        }
+      }
+      return null;
+    }
+
+    if (checkedTools.indexOf('lp') !== -1) {
+      outputs.Lp = readOut('out-lp', 'L_p');
+    }
+    if (checkedTools.indexOf('fr') !== -1) {
+      outputs.fce = readOut('out-fr', 'f_ce');
+      outputs.fci = readOut('out-fr', 'f_ci');
+      outputs.fpe = readOut('out-fr', 'f_pe');
+    }
+    if (checkedTools.indexOf('sp') !== -1) {
+      outputs.eta = readOut('out-sp', 'η_∥');
+    }
+    if (checkedTools.indexOf('bt') !== -1) {
+      outputs.bt = readOut('out-bt', 'β_t');
+      outputs.bN = readOut('out-bt', 'β_N');
+    }
+    if (checkedTools.indexOf('q') !== -1) {
+      outputs.q95 = readOut('out-q', 'q_95');
+    }
+    if (checkedTools.indexOf('lr') !== -1) {
+      outputs.rho = readOut('out-lr', 'ρ');
+      if (outputs.rho === null) {
+        // fallback: find first row with a numeric value
+        var el = document.getElementById('out-lr');
+        if (el) {
+          var firstVal = el.querySelector('.ovalue');
+          if (firstVal) outputs.rho = firstVal.textContent.trim();
+        }
+      }
+    }
+
+    return { params: labels, outputs: outputs, tools: checkedTools };
+  }
+
+  function recordSnapshot() {
+    var snap = grabSnapshot();
+    cmpRecords.push(snap);
+    saveRecords();
+    renderComparisonTable();
+  }
+
+  function deleteRecord(idx) {
+    cmpRecords.splice(idx, 1);
+    saveRecords();
+    renderComparisonTable();
+  }
+
+  function clearAllRecords() {
+    if (cmpRecords.length === 0) return;
+    cmpRecords = [];
+    saveRecords();
+    renderComparisonTable();
+  }
+
+  function renderComparisonTable() {
+    var wrapper = document.getElementById('cmp-table-wrapper');
+    var thead   = document.getElementById('cmp-thead');
+    var tbody   = document.getElementById('cmp-tbody');
+    var empty   = document.getElementById('cmp-empty');
+    var count   = document.getElementById('cmp-count');
+
+    count.textContent = cmpRecords.length + ' 条记录';
+
+    if (cmpRecords.length === 0) {
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    // Build column definitions
+    var params = ['R','a','Bt','Ip','ne','Te','Ti','kappa','li','Zeff'];
+    var paramLabels = {
+      R:'R', a:'a', Bt:'Bt', Ip:'Ip', ne:'ne', Te:'Te', Ti:'Ti',
+      kappa:'κ', li:'li', Zeff:'Zeff'
+    };
+    var paramUnits = {
+      R:'m', a:'m', Bt:'T', Ip:'MA', ne:'10²⁰/m³',
+      Te:'keV', Ti:'keV', kappa:'', li:'', Zeff:''
+    };
+
+    // Collect which output columns to show based on what tools were checked
+    var allOutCols = [];
+    var outColDef = {
+      Lp:  { label:'Lp', unit:'μH' },
+      fce: { label:'f_ce', unit:'GHz' },
+      fci: { label:'f_ci', unit:'MHz' },
+      fpe: { label:'f_pe', unit:'GHz' },
+      eta: { label:'η∥', unit:'Ω·m' },
+      bt:  { label:'βt', unit:'%' },
+      bN:  { label:'βN', unit:'' },
+      q95: { label:'q_95', unit:'' },
+      rho: { label:'ρ_L', unit:'mm' }
+    };
+    var toolToOutKeys = {
+      lp: ['Lp'],
+      fr: ['fce','fci','fpe'],
+      sp: ['eta'],
+      bt: ['bt','bN'],
+      q:  ['q95'],
+      lr: ['rho']
+    };
+
+    cmpRecords.forEach(function(rec) {
+      (rec.tools || []).forEach(function(t) {
+        var keys = toolToOutKeys[t] || [];
+        keys.forEach(function(k) {
+          if (allOutCols.indexOf(k) === -1) allOutCols.push(k);
+        });
+      });
+    });
+
+    // Render <thead>
+    var theadHtml = '<tr>';
+    theadHtml += '<th class="param-col">#</th>';
+    params.forEach(function(p) {
+      var unit = paramUnits[p] ? '<br><span style="font-weight:400;font-size:0.65rem;color:var(--text-tertiary)">' + paramUnits[p] + '</span>' : '';
+      theadHtml += '<th class="param-col">' + paramLabels[p] + unit + '</th>';
+    });
+    allOutCols.forEach(function(k) {
+      var d = outColDef[k];
+      var unit = d && d.unit ? '<br><span style="font-weight:400;font-size:0.65rem;color:var(--text-tertiary)">' + d.unit + '</span>' : '';
+      theadHtml += '<th class="output-col">' + (d ? d.label : k) + unit + '</th>';
+    });
+    theadHtml += '<th class="action-col">操作</th>';
+    theadHtml += '</tr>';
+    thead.innerHTML = theadHtml;
+
+    // Render <tbody>
+    var tblHtml = '';
+    for (var i = 0; i < cmpRecords.length; i++) {
+      var rec = cmpRecords[i];
+      var p = rec.params || {};
+      var o = rec.outputs || {};
+      tblHtml += '<tr>';
+      tblHtml += '<td style="font-weight:600;color:var(--text-secondary)">' + (i + 1) + '</td>';
+      params.forEach(function(k) {
+        var v = p[k];
+        var display = v !== undefined && v !== null && v !== '' ? v : '—';
+        if (typeof display === 'number') display = parseFloat(display.toFixed(4));
+        tblHtml += '<td>' + display + '</td>';
+      });
+      allOutCols.forEach(function(k) {
+        var v = o[k];
+        tblHtml += '<td>' + (v !== undefined && v !== null ? v : '—') + '</td>';
+      });
+      tblHtml += '<td><button class="btn-del-record" onclick="deleteRecord(' + i + ')" title="删除此记录">✕</button></td>';
+      tblHtml += '</tr>';
+    }
+    tbody.innerHTML = tblHtml;
+  }
+
+  /* ==================================================================
    *  Init
    * ================================================================ */
   window.addEventListener('DOMContentLoaded', function() {
     bindToggles();
+    loadRecords();
+    renderComparisonTable();
     recalc();
 
     // Recalc on any param change
