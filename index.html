@@ -237,6 +237,14 @@
       </div>
 
       <div class="device-card">
+        <h3>EXL</h3>
+        <div class="tags"><span class="tag tag-tokamak">Tokamak</span></div>
+        <div class="org">新奥集团（中国廊坊）</div>
+        <div class="desc">紧凑型聚变装置，由民营企业新奥集团建造，探索球形托卡马克设计与聚变工程可行性。</div>
+        <div class="status">⚡ 运行中 · 私营</div>
+      </div>
+
+      <div class="device-card">
         <h3>FTU</h3>
         <div class="tags"><span class="tag tag-tokamak">Tokamak</span></div>
         <div class="org">ENEA（意大利弗拉斯卡蒂）</div>
@@ -397,6 +405,14 @@
       </div>
 
       <div class="device-card">
+        <h3>TRIAM-1M</h3>
+        <div class="tags"><span class="tag tag-tokamak">Tokamak</span></div>
+        <div class="org">九州大学（日本春日/福冈）</div>
+        <div class="desc">世界最长脉冲托卡马克运行纪录（5 小时以上），专注稳态等离子体维持与射频加热技术。</div>
+        <div class="status">🛑 已退役 → QUEST 继承</div>
+      </div>
+
+      <div class="device-card">
         <h3>TEXTOR</h3>
         <div class="tags"><span class="tag tag-tokamak">Tokamak</span><span class="tag tag-historical">历史</span></div>
         <div class="org">Forschungszentrum Jülich（德国于利希）</div>
@@ -473,11 +489,13 @@
     {name:'TAE C‑2W',    lon:-117.66,lat:33.68,href:'../research/device-tae.md',   org:'TAE, Foothill Ranch',status:'active',size:'small'},
     {name:'Helion',      lon:-122.20,lat:47.98,href:'../research/device-helion.md', org:'Helion, Everett',status:'building',size:'small'},
     {name:'General Fusion',lon:-123.12,lat:49.28,href:'../research/device-gf.md',  org:'GF, Vancouver',  status:'building',size:'small'},
-    {name:'GOLEM',       lon:14.42, lat:50.10, href:'../research/device-golem.md', org:'ČVUT, Prague',   status:'active',  size:'small'}
+    {name:'GOLEM',       lon:14.42, lat:50.10, href:'../research/device-golem.md', org:'ČVUT, Prague',   status:'active',  size:'small'},
+    {name:'TRIAM‑1M',    lon:130.47,lat:33.53, href:'../research/device-triam.md',  org:'九州大学, 福冈',   status:'retired',size:'small'},
+    {name:'EXL',         lon:116.70,lat:39.52, href:'../research/device-exl.md',    org:'新奥集团, 廊坊',   status:'active',  size:'small'}
   ];
 
   /* ---- 标记大小: 缩小尺寸减少重叠 ---- */
-  var SIZE_R = { large: 3.5, medium: 2.5, small: 2.0 };
+  var SIZE_R = { large: 4, medium: 3, small: 2.5 };
 
   /* ---- 状态颜色 ---- */
   var STATUS_COLORS = {
@@ -538,10 +556,11 @@
         halo.setAttribute('r', rB * 3); halo.setAttribute('fill',color);
         halo.setAttribute('opacity','0'); halo.style.transition='opacity 0.2s';
 
-        // 主标记圆 (无边框)
+        // 主标记圆 (白色描边增强对比度)
         var c = g.appendChild(document.createElementNS(ns, 'circle'));
         c.setAttribute('cx',cx); c.setAttribute('cy',cy);
         c.setAttribute('r', rB); c.setAttribute('fill',color);
+        c.setAttribute('stroke','rgba(255,255,255,0.8)'); c.setAttribute('stroke-width','0.8');
         c.style.transition='r 0.15s';
 
         // 点击区域
