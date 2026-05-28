@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>技术路线对比 · 聚变装置目录</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* ============================================
+       Technology Comparison Page — Specific Styles
+       ============================================ */
+    .page-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 36px;
+      line-height: 1.7;
+    }
+
+    /* ---- Approach Cards ---- */
+    .approach-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 900px) {
+      .approach-grid { grid-template-columns: 1fr; }
+    }
+
+    .approach-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.25s, transform 0.2s;
+    }
+
+    .approach-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-3px);
+    }
+
+    .approach-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+
+    .approach-card .approach-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 3px 12px;
+      border-radius: 20px;
+      color: #fff;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      margin-bottom: 14px;
+    }
+
+    .approach-card .principle {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 18px;
+      line-height: 1.7;
+      padding: 12px 16px;
+      background: var(--accent-subtle);
+      border-radius: var(--radius);
+    }
+
+    .approach-card .pros-cons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .approach-card .pros-cons h4 {
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .approach-card .pros-cons ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .approach-card .pros-cons li {
+      font-size: 0.82rem;
+      color: var(--text);
+      margin-bottom: 5px;
+      line-height: 1.55;
+      padding-left: 14px;
+      position: relative;
+    }
+
+    .approach-card .pros-cons li::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .approach-card .pros h4 { color: #4a8c6e; }
+    .approach-card .pros li::before { background: #4a8c6e; }
+    .approach-card .cons h4 { color: #b8913d; }
+    .approach-card .cons li::before { background: #b8913d; }
+
+    .approach-card .devices,
+    .approach-card .trl {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .approach-card .devices strong,
+    .approach-card .trl strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .trl-bar {
+      display: flex;
+      gap: 3px;
+      margin-top: 4px;
+    }
+
+    .trl-bar .trl-step {
+      width: 20px;
+      height: 10px;
+      border-radius: 2px;
+      background: var(--border);
+      transition: background 0.2s;
+    }
+
+    .trl-bar .trl-step.filled {
+      background: var(--accent-light);
+    }
+
+    .trl-bar .trl-step.filled.high {
+      background: var(--accent);
+    }
+
+    .trl-label {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    /* ---- Comparison Table ---- */
+    .section-title {
+      font-size: 1.3rem;
+      margin-bottom: 12px;
+      margin-top: 8px;
+    }
+
+    .section-intro-text {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.7;
+    }
+
+    .comparison-table thead th {
+      font-size: 0.82rem;
+      padding: 10px 8px;
+    }
+
+    .comparison-table thead th:first-child {
+      min-width: 130px;
+    }
+
+    .comparison-table tbody td:first-child {
+      text-align: left;
+      font-weight: 500;
+      background: #f0ede6;
+      position: sticky;
+      left: 0;
+      z-index: 5;
+      white-space: nowrap;
+    }
+
+    .comparison-table tbody td {
+      font-size: 0.82rem;
+      padding: 9px 10px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .comparison-table .check {
+      color: #4a8c6e;
+      font-weight: 600;
+    }
+
+    .comparison-table .cross {
+      color: #b8913d;
+    }
+
+    .comparison-table .tilde {
+      color: var(--text-tertiary);
+    }
+
+    /* ---- Timeline ---- */
+    .timeline-section {
+      margin-top: 48px;
+    }
+
+    .timeline {
+      position: relative;
+      padding: 20px 0;
+      margin: 24px 0 0;
+    }
+
+    .timeline-track {
+      position: relative;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin: 0 12px;
+    }
+
+    .timeline-track .track-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 35%;
+      background: linear-gradient(90deg, var(--accent-light), var(--accent));
+      border-radius: 3px;
+      transition: width 0.5s;
+    }
+
+    .timeline .milestone {
+      position: absolute;
+      top: -12px;
+      transform: translateX(-50%);
+      text-align: center;
+      width: 120px;
+    }
+
+    .timeline .milestone .dot {
+      display: block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 3px solid var(--accent-light);
+      margin: 0 auto 8px;
+      transition: all 0.2s;
+    }
+
+    .timeline .milestone:hover .dot {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.2);
+    }
+
+    .timeline .milestone .year {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+
+    .timeline .milestone .event {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      max-width: 120px;
+    }
+
+    .timeline .milestone.future .dot {
+      border-color: var(--text-tertiary);
+    }
+
+    .timeline .milestone.future .year {
+      color: var(--text-tertiary);
+    }
+
+    .timeline .milestone.major .dot {
+      width: 18px;
+      height: 18px;
+      border-width: 4px;
+    }
+
+    .timeline-label-left,
+    .timeline-label-right {
+      position: absolute;
+      top: -8px;
+      font-size: 0.7rem;
+      color: var(--text-tertiary);
+      transform: translateY(-50%);
+    }
+
+    .timeline-label-left { left: -2px; }
+    .timeline-label-right { right: -2px; }
+
+    /* Timeline responsive */
+    @media (max-width: 768px) {
+      .approach-card .pros-cons { grid-template-columns: 1fr; }
+      .timeline { overflow-x: auto; min-height: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1><a href="../index.html">聚变装置目录</a></h1>
+      <nav>
+        <ul>
+          <li><a href="../index.html">首页 · 装置一览</a></li>
+          <li><a href="zero-d-parameters.html">零维参数表</a></li>
+          <li><a href="tools.html">计算工具</a></li>
+          <li><a href="technology-comparison.html" class="active">技术路线对比</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <h2>技术路线对比</h2>
+    <p class="page-subtitle">
+      磁约束聚变研究至今已发展出多条技术路线。本文将四种主要方案——托卡马克（Tokamak）、球形托卡马克（Spherical Tokamak）、仿星器（Stellarator）、反场箍缩（RFP）——放在同一标尺下比较，从物理原理、工程复杂度、性能记录到商业化前景进行系统评估，以帮助非技术背景的决策者和投资者快速建立全景认知。
+    </p>
+
+    <!-- ========== Approach Cards ========== -->
+    <div class="approach-grid">
+
+      <!-- Tokamak -->
+      <div class="approach-card">
+        <span class="approach-tag tag-tokamak" style="background:var(--tag-tokamak);">托卡马克 Tokamak</span>
+        <h3>常规托卡马克</h3>
+        <div class="principle">
+          <strong>原理：</strong>利用环向磁场和极向磁场（由等离子体环向电流产生）构成螺旋磁面，约束高温等离子体。托卡马克是磁约束聚变中研究最深入、性能数据最丰富的路线。
+        </div>
+        <div class="pros-cons">
+          <div class="pros">
+            <h4>✓ 优势</h4>
+            <ul>
+              <li>实验数据库最大，约束定标率最为成熟</li>
+              <li>三乘积 nTτ 值最高，曾实现 16 MW 聚变功率（JET）</li>
+              <li>ITER 已验证了从实验堆到 DEMO 的工程路径</li>
+              <li>先进运行模式（H-mode、AT）可大幅提升 β_N</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <h4>✗ 劣势</h4>
+            <ul>
+              <li>等离子体电流驱动带来破裂（Disruption）风险</li>
+              <li>脉冲运行——需要通过电流驱动实现稳态</li>
+              <li>环向场线圈的工程应力随尺寸急剧增加</li>
+              <li>大尺寸聚变堆造价极高（ITER ～$22B）</li>
+            </ul>
+          </div>
+        </div>
+        <div class="devices"><strong>主要装置：</strong>ITER（建）、JET（退）、JT-60SA、SPARC（建）、EAST、KSTAR、DIII-D、ASDEX-U</div>
+        <div class="trl">
+          <strong>TRL 评估：</strong>5–8（物理原理经充分验证，ITER 推动工程集成验证）
+          <div class="trl-bar">
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled"></span>
+            <span class="trl-step filled"></span>
+            <span class="trl-step"></span>
+          </div>
+          <div class="trl-label">① 原理 → ③ 实验验证 → ⑤ 系统验证 → ⑦ 示范 → ⑨ 商业运行</div>
+        </div>
+      </div>
+
+      <!-- Spherical Tokamak -->
+      <div class="approach-card">
+        <span class="approach-tag tag-spherical" style="background:var(--tag-spherical);">球形托卡马克 ST</span>
+        <h3>球形托卡马克</h3>
+        <div class="principle">
+          <strong>原理：</strong>环径比 A ≈ 1.2–1.8，等离子体呈"球形"（类苹果形），天然具备高 β 稳定性，可在较低磁场下达到高约束性能。本质上是托卡马克的一个子类，但工程结构和物理性能差异显著。
+        </div>
+        <div class="pros-cons">
+          <div class="pros">
+            <h4>✓ 优势</h4>
+            <ul>
+              <li>天然高 β_N（可达 6–8），能效比优于常规托卡马克</li>
+              <li>紧凑尺寸——装置体积可缩小 2–3 倍</li>
+              <li>偏滤器在"外腿"侧，排热几何更有利</li>
+              <li>商用堆概念（如 ARC）可采用高温超导，极具吸引力</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <h4>✗ 劣势</h4>
+            <ul>
+              <li>中心柱空间极度受限，包层/屏蔽设计难度大</li>
+              <li>等离子体电流高（IP/工程电流比值高），破裂风险显著</li>
+              <li>实验数据库远小于常规托卡马克</li>
+              <li>高温超导线圈技术仍在快速演进中</li>
+            </ul>
+          </div>
+        </div>
+        <div class="devices"><strong>主要装置：</strong>MAST-U（英）、NSTX-U（美、升级中）、ST40（英）、SMART（西班牙）</div>
+        <div class="trl">
+          <strong>TRL 评估：</strong>4–6（中等规模装置已验证高 β 潜力，但聚变堆尺度的集成验证尚未进行）
+          <div class="trl-bar">
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled"></span>
+            <span class="trl-step filled"></span>
+            <span class="trl-step"></span>
+            <span class="trl-step"></span>
+            <span class="trl-step"></span>
+          </div>
+          <div class="trl-label">① 原理 → ③ 实验验证 → ⑤ 系统验证 → ⑦ 示范 → ⑨ 商业运行</div>
+        </div>
+      </div>
+
+      <!-- Stellarator -->
+      <div class="approach-card">
+        <span class="approach-tag tag-stellarator" style="background:var(--tag-stellarator);">仿星器 Stellarator</span>
+        <h3>仿星器</h3>
+        <div class="principle">
+          <strong>原理：</strong>通过外部螺旋线圈直接产生三维磁面，无需等离子体电流维持平衡。从原理上消除大破裂风险，实现真正的稳态运行。仿星器的性能和成本核心在于磁体工程和三维优化设计。
+        </div>
+        <div class="pros-cons">
+          <div class="pros">
+            <h4>✓ 优势</h4>
+            <ul>
+              <li>等离子体电流为零 → 无大破裂风险 → 运行可靠性极高</li>
+              <li>天生稳态运行，无需电流驱动即可维持平衡</li>
+              <li>偏滤器可优化为三维"岛偏滤器"，热负荷分布均匀</li>
+              <li>W7-X 已实现三乘积世界纪录级性能</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <h4>✗ 劣势</h4>
+            <ul>
+              <li>三维线圈制造精度要求极高，建造难度和成本大</li>
+              <li>约束性能通常低于同等规模的托卡马克</li>
+              <li>装置体积大——要达到等同性能需更大尺寸</li>
+              <li>核聚变堆场景下的三维包层设计尚未验证</li>
+            </ul>
+          </div>
+        </div>
+        <div class="devices"><strong>主要装置：</strong>W7-X（德）、LHD（日、退）、TJ-II（西）、HSX（美）、CFQS（中日合作）</div>
+        <div class="trl">
+          <strong>TRL 评估：</strong>4–6（W7-X 已展示优异的约束品质，但聚变中子环境下的工程集成待验证）
+          <div class="trl-bar">
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled"></span>
+            <span class="trl-step filled"></span>
+            <span class="trl-step"></span>
+            <span class="trl-step"></span>
+            <span class="trl-step"></span>
+          </div>
+          <div class="trl-label">① 原理 → ③ 实验验证 → ⑤ 系统验证 → ⑦ 示范 → ⑨ 商业运行</div>
+        </div>
+      </div>
+
+      <!-- RFP -->
+      <div class="approach-card">
+        <span class="approach-tag tag-rfp" style="background:var(--tag-rfp);">反场箍缩 RFP</span>
+        <h3>反场箍缩</h3>
+        <div class="principle">
+          <strong>原理：</strong>环向磁场在等离子体边界附近反向（故名"反场"），与极向场量级接近。约束主要依靠等离子体自身电流，外部环向场仅约 0.2–1.5 T。RFP 拓扑接近松弛（force-free）状态，磁场线具有大的磁剪切。
+        </div>
+        <div class="pros-cons">
+          <div class="pros">
+            <h4>✓ 优势</h4>
+            <ul>
+              <li>外磁场极小 → 无需大型超导磁体 → 工程集成更紧凑</li>
+              <li>环径比 A 几乎不受限制（可做到接近 1）</li>
+              <li>等离子体电流大 → 欧姆加热即可加热到聚变温度</li>
+              <li>理论上可实现高 β</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <h4>✗ 劣势</h4>
+            <ul>
+              <li>约束性能远逊于托卡马克（τE 低 1–2 个数量级）</li>
+              <li>三维 MHD 非线性动力学复杂，输运通道高度异常</li>
+              <li>从未达到聚变相关的三乘积</li>
+              <li>研究社区大幅萎缩，RFX-mod 退役后缺乏大型装置</li>
+            </ul>
+          </div>
+        </div>
+        <div class="devices"><strong>主要装置：</strong>RFX-mod（意、退）、MST（美、退）、Madison Symmetric Torus、EXTRAP T2R（瑞典）</div>
+        <div class="trl">
+          <strong>TRL 评估：</strong>2–4（基础物理已验证，但距聚变参数级约束仍有巨大差距）
+          <div class="trl-bar">
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled high"></span>
+            <span class="trl-step filled"></span>
+            <span class="trl-step"></span>
+            <span class="trl-step"></span>
+            <span class="trl-step"></span>
+            <span class="trl-step"></span>
+            <span class="trl-step"></span>
+            <span class="trl-step"></span>
+          </div>
+          <div class="trl-label">① 原理 → ③ 实验验证 → ⑤ 系统验证 → ⑦ 示范 → ⑨ 商业运行</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========== Comparison Table ========== -->
+    <h2 class="section-title">综合对比表</h2>
+    <p class="section-intro-text">
+      以下从物理原理、工程特性、已实现性能和发展前景等方面，对四种技术路线进行横向对比。"<span class="check">✓</span>" 表示该项具备优势，"<span class="cross">✗</span>" 表示存在困难，"<span class="tilde">～</span>" 表示中性或条件依赖。
+    </p>
+
+    <div class="table-wrapper">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>对比维度</th>
+            <th>托卡马克<br>Tokamak</th>
+            <th>球形托卡马克<br>Spherical Tokamak</th>
+            <th>仿星器<br>Stellarator</th>
+            <th>反场箍缩<br>RFP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>约束原理</td>
+            <td>环向场 + 等离子体电流产生的极向场构成螺旋磁面</td>
+            <td>同左，但环径比 A &lt; 2，球面几何</td>
+            <td>外部螺旋线圈直接产生三维磁面</td>
+            <td>反场位形，环向场在边界反向</td>
+          </tr>
+          <tr>
+            <td>平衡需等离子体电流？</td>
+            <td><span class="check">✓</span> 需要（～15 MA 量级）</td>
+            <td><span class="check">✓</span> 需要（～2–8 MA）</td>
+            <td><span class="tilde">✗</span> 不需要（Ip = 0）</td>
+            <td><span class="check">✓</span> 需要（电流大）</td>
+          </tr>
+          <tr>
+            <td>脉冲 / 稳态</td>
+            <td>脉冲为主；可稳态（需驱动）</td>
+            <td>脉冲为主</td>
+            <td><span class="check">✓</span> 天然稳态</td>
+            <td>脉冲（持续数秒）</td>
+          </tr>
+          <tr>
+            <td>环径比 A</td>
+            <td>2.5–4.5</td>
+            <td>1.2–1.8</td>
+            <td>6–11</td>
+            <td>1.5–3（几乎无限制）</td>
+          </tr>
+          <tr>
+            <td>最高 β<sub>N</sub> 实现值</td>
+            <td>~4–5（常规）；>6（先进运行模式）</td>
+            <td><span class="check">✓</span> ~6–8</td>
+            <td>~3–5</td>
+            <td>~10–15（理论）；~5（实验）</td>
+          </tr>
+          <tr>
+            <td>三乘积最高纪录</td>
+            <td><span class="check">✓</span> ~1.5×10<sup>21</sup> m⁻³·keV·s（JET D-T）</td>
+            <td>~10<sup>19</sup>–10<sup>20</sup></td>
+            <td>~2×10<sup>19</sup>（W7-X）</td>
+            <td>~10<sup>17</sup>–10<sup>18</sup></td>
+          </tr>
+          <tr>
+            <td>能量约束时间定标率</td>
+            <td>IPB98(y,2) ✅ 高度成熟</td>
+            <td>基于 IPB98 修正，不确定性较大</td>
+            <td>ISS04 v3.0 较成熟（W7-X 验证良好）</td>
+            <td>经验定标差距大，不确定性极高</td>
+          </tr>
+          <tr>
+            <td>偏滤器排杂设计难度</td>
+            <td>中等偏难（窄腿 SOL 热流集中）</td>
+            <td><span class="tilde">～</span> 外腿有利，但内腿受限</td>
+            <td><span class="check">✓</span> 岛偏滤器天然分散热负荷</td>
+            <td>设计经验极少</td>
+          </tr>
+          <tr>
+            <td>建造复杂度</td>
+            <td>中等——超导线圈工程已量产</td>
+            <td>较高——中心柱紧凑限制了空间</td>
+            <td><span class="cross">✗</span> 高——三维线圈制造难度大</td>
+            <td><span class="check">✓</span> 低——外磁场极小</td>
+          </tr>
+          <tr>
+            <td>聚变堆经济性潜力</td>
+            <td>中等——已验证路径但装置规模大</td>
+            <td><span class="check">✓</span> 高——紧凑优势明显</td>
+            <td>较低——装置体积大、单位成本偏高</td>
+            <td>未知——未达到聚变参数区间</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ========== Key Insights ========== -->
+    <h2 class="section-title">关键认识</h2>
+    <p class="section-intro-text">
+      从对比中可提炼出几条行业共识性判断：
+    </p>
+    <div style="margin: 0 0 40px; padding: 20px 28px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm);">
+      <ol style="font-size: 0.9rem; color: var(--text); line-height: 1.9; margin-left: 20px;">
+        <li><strong>托卡马克是当前最成熟、最"无争议"的路径</strong>——三乘积和聚变功率的纪录全由它保持。ITER 将在 2030 年代中期给出集成验证的最终答案。</li>
+        <li><strong>球形托卡马克是最受私人资本关注的路线</strong>——紧凑尺寸降低了工程投入门槛，配合高温超导（HTS）技术的发展，商业化时间表最激进（CFS 的 SPARC/ARC）。</li>
+        <li><strong>仿星器的长期吸引力在于"没有破裂"</strong>——对电网负载要求更低、可用率更高，适合基荷电站场景。但 W7-X 之后的下一步（是否建造聚变中子仿星器）尚未形成国际共识。</li>
+        <li><strong>RFP 目前不在主流聚变路线图中</strong>——尽管物理独特且曾产出重要成果（MST 反磁剪切、RFX 自组织），但约束性能与聚变堆目标之间存在一个量级以上的差距。</li>
+        <li><strong>没有"折叠椅"——短期内不存在单一的优胜方案。</strong>不同技术路线可能服务于不同的市场场景（基荷 vs. 负荷跟随 vs. 过程热），甚至不排除混合方案。</li>
+      </ol>
+    </div>
+
+    <!-- ========== Timeline ========== -->
+    <div class="timeline-section">
+      <h2 class="section-title">关键技术里程碑时间线</h2>
+      <p class="section-intro-text">
+        以下为磁约束聚变领域在可预见的未来 20–30 年内最重要的节点。时间基于当前国际共识性预判，实际工期可能因资金和政治因素变化。
+      </p>
+
+      <div class="timeline">
+        <div class="timeline-track">
+          <div class="track-fill"></div>
+
+          <!-- 2025 -->
+          <div class="milestone" style="left: 8%;">
+            <span class="dot"></span>
+            <span class="year">2025</span>
+            <span class="event">W7-X 三乘积<br>世界纪录</span>
+          </div>
+
+          <!-- ~2027 -->
+          <div class="milestone major" style="left: 20%;">
+            <span class="dot"></span>
+            <span class="year">~2027</span>
+            <span class="event">SPARC<br>首次等离子体</span>
+          </div>
+
+          <!-- ~2033-34 -->
+          <div class="milestone major" style="left: 42%;">
+            <span class="dot"></span>
+            <span class="year">~2033–34</span>
+            <span class="event">ITER<br>首次等离子体</span>
+          </div>
+
+          <!-- ~2035+ -->
+          <div class="milestone" style="left: 58%;">
+            <span class="dot"></span>
+            <span class="year">~2035+</span>
+            <span class="event">CFETR、DEMO<br>概念设计完成</span>
+          </div>
+
+          <!-- ~2040 -->
+          <div class="milestone future" style="left: 75%;">
+            <span class="dot"></span>
+            <span class="year">~2040</span>
+            <span class="event">ITER<br>全功率 D-T 运行</span>
+          </div>
+
+          <!-- ~2040-50 -->
+          <div class="milestone future" style="left: 90%;">
+            <span class="dot"></span>
+            <span class="year">~2040–50</span>
+            <span class="event">首个聚变<br>示范堆建设</span>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; font-size: 0.78rem; color: var(--text-tertiary); text-align: center;">
+        标注 <strong>粗圆点</strong> 的里程碑为"首次等离子体"节点（进入下一个阶段）。虚线为远期预判，实际时间可能因进展而调整。
+      </div>
+    </div>
+
+    <!-- ========== Summary TRL Table ========== -->
+    <div style="margin-top: 48px;">
+      <h2 class="section-title">技术成熟度（TRL）总览</h2>
+      <p class="section-intro-text">
+        TRL（Technology Readiness Level）采用 1–9 级标度，参照美国 DOE 和 NASA 定义，结合聚变装置特点调整。以下为综合评分，取各子领域（物理、磁体、排热、材料等）的&ldquo;最低打分项&rdquo;。
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>TRL 等级</th>
+              <th style="width: 22%;">托卡马克</th>
+              <th style="width: 22%;">球形托卡马克</th>
+              <th style="width: 22%;">仿星器</th>
+              <th style="width: 22%;">反场箍缩</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="label">9 — 商业运营</td>
+              <td><span class="tilde">—</span></td>
+              <td><span class="tilde">—</span></td>
+              <td><span class="tilde">—</span></td>
+              <td><span class="tilde">—</span></td>
+            </tr>
+            <tr>
+              <td class="label">8 — 示范堆完成</td>
+              <td><span class="tilde">—</span></td>
+              <td><span class="tilde">—</span></td>
+              <td><span class="tilde">—</span></td>
+              <td><span class="tilde">—</span></td>
+            </tr>
+            <tr>
+              <td class="label">7 — 系统级原型验证</td>
+              <td><span class="tilde">~ITER 目标</span></td>
+              <td><span class="tilde">—</span></td>
+              <td><span class="tilde">—</span></td>
+              <td><span class="tilde">—</span></td>
+            </tr>
+            <tr>
+              <td class="label">6 — 子系统/部件验证</td>
+              <td><span class="check">✓</span> 偏滤器、超导、加热</td>
+              <td><span class="tilde">部分</span></td>
+              <td><span class="tilde">—</span></td>
+              <td><span class="tilde">—</span></td>
+            </tr>
+            <tr>
+              <td class="label">5 — 物理基准验证</td>
+              <td><span class="check">✓</span> IPB98, D-T 运行</td>
+              <td><span class="check">✓</span> 高 β 已验证</td>
+              <td><span class="check">✓</span> W7-X 约束品质</td>
+              <td><span class="tilde">部分</span></td>
+            </tr>
+            <tr>
+              <td class="label">4 — 中等装置验证</td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+            </tr>
+            <tr>
+              <td class="label">3 — 概念验证</td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+            </tr>
+            <tr>
+              <td class="label">2 — 原理构想</td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>技术路线对比 · 聚变装置目录</p>
+  </footer>
+</body>
+</html>

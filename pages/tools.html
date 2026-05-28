@@ -761,6 +761,7 @@
           <li><a href="../index.html">首页 · 装置一览</a></li>
           <li><a href="zero-d-parameters.html">零维参数表</a></li>
           <li><a href="tools.html" class="active">计算工具</a></li>
+          <li><a href="technology-comparison.html">技术路线</a></li>
         </ul>
       </nav>
     </div>
@@ -1177,6 +1178,21 @@
 
             <div class="compare-empty" id="cmp-empty">
               <span>📋</span><br>暂无记录。调整参数后点击「记录当前结果」录入数据。
+            </div>
+
+            <div style="margin-top:18px; border-top:1px solid var(--tool-border); padding-top:14px;">
+              <button class="btn-compare" style="background:var(--surface);color:var(--text-secondary);border:1px solid var(--tool-border);font-size:0.82rem;" onclick="toggleChart()">📈 散点图</button>
+              <div id="chart-container" style="display:none;margin-top:12px;">
+                <div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;">
+                  <span style="display:flex;align-items:center;gap:4px;font-size:0.8rem;color:var(--text-secondary);">
+                    X 轴: <select id="chart-x" onchange="renderChart()" style="padding:4px 8px;border:1px solid var(--input-border);border-radius:4px;font-size:0.78rem;"></select>
+                  </span>
+                  <span style="display:flex;align-items:center;gap:4px;font-size:0.8rem;color:var(--text-secondary);">
+                    Y 轴: <select id="chart-y" onchange="renderChart()" style="padding:4px 8px;border:1px solid var(--input-border);border-radius:4px;font-size:0.78rem;"></select>
+                  </span>
+                </div>
+                <svg id="chart-svg" width="100%" height="360" style="border:1px solid var(--tool-border);border-radius:6px;background:#fcfbf8;font-family:'Noto Sans Mono',monospace;font-size:10px;"></svg>
+              </div>
             </div>
           </section>
         </div><!-- /.tab-panel#compare-tab -->
@@ -1968,6 +1984,189 @@
       tblHtml += '</tr>';
     }
     tbody.innerHTML = tblHtml;
+  }
+
+  /* ==================================================================
+   *  Comparison chart — SVG scatter plot
+   * ================================================================ */
+
+  /* Define numeric columns for charting */
+  var CHART_COLS = {
+    'R':'R (m)', 'a':'a (m)', 'Bt':'Bt (T)', 'Ip':'Ip (MA)',
+    'ne':'nₑ (10²⁰/m³)', 'Te':'Tₑ (keV)', 'Ti':'Tᵢ (keV)',
+    'Lp':'Lp (μH)', 'fce':'f_ce (GHz)', 'fci':'f_ci (MHz)',
+    'eta':'η∥ (Ω·m)', 'bt':'βt (%)', 'bN':'βN',
+    'q95':'q_95', 'rho':'ρ_L (mm)',
+    'tauE':'τE (s)', 'Pfus':'Pfus (MW)', 'Qval':'Q'
+  };
+
+  function toggleChart() {
+    var el = document.getElementById('chart-container');
+    if (!el) return;
+    var show = el.style.display !== 'block';
+    el.style.display = show ? 'block' : 'none';
+    if (show) { buildChartSelectors(); renderChart(); }
+  }
+
+  function buildChartSelectors() {
+    if (cmpRecords.length === 0) return;
+
+    // Collect available numeric columns from records
+    var availParams = ['R','a','Bt','Ip','ne','Te','Ti'];
+    var availOut = [];
+    cmpRecords.forEach(function(rec) {
+      (rec.tools||[]).forEach(function(t) {
+        var keys = [];
+        if (t==='lp') keys=['Lp']; if (t==='fr') keys=['fce','fci'];
+        if (t==='sp') keys=['eta']; if (t==='bt') keys=['bt','bN'];
+        if (t==='q') keys=['q95']; if (t==='lr') keys=['rho'];
+        if (t==='fx') keys=['tauE','Pfus','Qval'];
+        keys.forEach(function(k) { if (availOut.indexOf(k)===-1) availOut.push(k); });
+      });
+    });
+
+    var allKeys = availParams.concat(availOut);
+
+    function populate(id, defaultKey) {
+      var sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = '';
+      allKeys.forEach(function(k) {
+        var label = CHART_COLS[k] || k;
+        var opt = document.createElement('option');
+        opt.value = k; opt.textContent = label;
+        if (k === defaultKey) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    // Default: β_N vs q_95 if available, else R vs a
+    var defX = availOut.indexOf('q95') !== -1 ? 'q95' : (availOut.indexOf('R') !== -1 ? 'R' : allKeys[0]);
+    var defY = availOut.indexOf('bN') !== -1 ? 'bN' : (availOut.indexOf('bt') !== -1 ? 'bt' : (allKeys.length > 1 ? allKeys[1] : allKeys[0]));
+    populate('chart-x', defX);
+    populate('chart-y', defY);
+  }
+
+  function getNumericValue(rec, col) {
+    // Try param first, then output
+    var p = rec.params || {};
+    if (p.hasOwnProperty(col) && p[col] !== null && p[col] !== '' && !isNaN(parseFloat(p[col]))) {
+      return parseFloat(p[col]);
+    }
+    var o = rec.outputs || {};
+    if (o.hasOwnProperty(col) && o[col] !== null && o[col] !== '' && o[col] !== '—') {
+      var parsed = parseFloat(o[col]);
+      if (!isNaN(parsed)) return parsed;
+    }
+    return NaN;
+  }
+
+  function renderChart() {
+    var svg = document.getElementById('chart-svg');
+    var xSel = document.getElementById('chart-x');
+    var ySel = document.getElementById('chart-y');
+    if (!svg || !xSel || !ySel || cmpRecords.length === 0) return;
+
+    var xCol = xSel.value;
+    var yCol = ySel.value;
+
+    // Collect data points
+    var points = [];
+    for (var i = 0; i < cmpRecords.length; i++) {
+      var xv = getNumericValue(cmpRecords[i], xCol);
+      var yv = getNumericValue(cmpRecords[i], yCol);
+      if (!isNaN(xv) && !isNaN(yv) && isFinite(xv) && isFinite(yv)) {
+        points.push({ x: xv, y: yv, idx: i });
+      }
+    }
+
+    if (points.length < 2) {
+      svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="var(--text-tertiary)" font-size="12" font-family="sans-serif">需要至少 2 条有有效数据的记录才能绘图</text>';
+      return;
+    }
+
+    // Chart dimensions
+    var W = svg.clientWidth || 700;
+    var H = 340;
+    var margin = { top: 20, right: 20, bottom: 40, left: 50 };
+    var plotW = W - margin.left - margin.right;
+    var plotH = H - margin.top - margin.bottom;
+
+    // Data range
+    var xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+    points.forEach(function(p) {
+      if (p.x < xMin) xMin = p.x; if (p.x > xMax) xMax = p.x;
+      if (p.y < yMin) yMin = p.y; if (p.y > yMax) yMax = p.y;
+    });
+
+    // Add 10% padding
+    var xPad = (xMax - xMin) * 0.1 || 1;
+    var yPad = (yMax - yMin) * 0.1 || 1;
+    xMin -= xPad; xMax += xPad;
+    yMin -= yPad; yMax += yPad;
+
+    function sx(v) { return margin.left + (v - xMin) / (xMax - xMin) * plotW; }
+    function sy(v) { return margin.top + plotH - (v - yMin) / (yMax - yMin) * plotH; }
+
+    // Build SVG
+    var svgContent = '';
+
+    // Grid lines
+    var nGridX = Math.min(8, Math.max(3, Math.round(plotW / 80)));
+    var nGridY = Math.min(8, Math.max(3, Math.round(plotH / 60)));
+    svgContent += '<g stroke="#e0ddd4" stroke-width="0.5">';
+    for (var i = 0; i <= nGridX; i++) {
+      var xv = xMin + (xMax - xMin) * i / nGridX;
+      var px = sx(xv);
+      svgContent += '<line x1="' + px + '" y1="' + margin.top + '" x2="' + px + '" y2="' + (margin.top+plotH) + '"/>';
+    }
+    for (var i = 0; i <= nGridY; i++) {
+      var yv = yMin + (yMax - yMin) * i / nGridY;
+      var py = sy(yv);
+      svgContent += '<line x1="' + margin.left + '" y1="' + py + '" x2="' + (margin.left+plotW) + '" y2="' + py + '"/>';
+    }
+    svgContent += '</g>';
+
+    // Axis labels
+    function fmtVal(v) {
+      if (Math.abs(v) >= 1000) return v.toExponential(1);
+      if (Math.abs(v) >= 10) return v.toFixed(1);
+      if (Math.abs(v) >= 1) return v.toFixed(2);
+      return v.toExponential(1);
+    }
+    // X axis ticks
+    svgContent += '<g fill="#7a756e" font-family="Noto Sans Mono,monospace" font-size="9">';
+    for (var i = 0; i <= nGridX; i++) {
+      var xv = xMin + (xMax - xMin) * i / nGridX;
+      var px = sx(xv);
+      svgContent += '<text x="' + px + '" y="' + (margin.top+plotH+14) + '" text-anchor="middle">' + fmtVal(xv) + '</text>';
+    }
+    // Y axis ticks
+    for (var i = 0; i <= nGridY; i++) {
+      var yv = yMin + (yMax - yMin) * i / nGridY;
+      var py = sy(yv);
+      svgContent += '<text x="' + (margin.left-6) + '" y="' + (py+3) + '" text-anchor="end">' + fmtVal(yv) + '</text>';
+    }
+    svgContent += '</g>';
+
+    // Axis titles
+    var xLabel = CHART_COLS[xCol] || xCol;
+    var yLabel = CHART_COLS[yCol] || yCol;
+    svgContent += '<text x="' + (margin.left+plotW/2) + '" y="' + (H-4) + '" text-anchor="middle" fill="#2d2a24" font-family="Noto Sans SC,sans-serif" font-size="11" font-weight="500">' + xLabel + '</text>';
+    svgContent += '<text x="12" y="' + (margin.top+plotH/2) + '" text-anchor="middle" fill="#2d2a24" font-family="Noto Sans SC,sans-serif" font-size="11" font-weight="500" transform="rotate(-90,12,' + (margin.top+plotH/2) + ')">' + yLabel + '</text>';
+
+    // Data points
+    var colors = ['#7a5c3d','#4a8c6e','#5b7a9a','#9a7a5a','#8a5a7a','#b8913d'];
+    points.forEach(function(p, i) {
+      var cx = sx(p.x), cy = sy(p.y);
+      var color = colors[p.idx % colors.length];
+      svgContent += '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="' + color + '" opacity="0.8" stroke="#fff" stroke-width="1.5"/>';
+      svgContent += '<title>#' + (p.idx+1) + ': (' + p.x.toFixed(3) + ', ' + p.y.toFixed(3) + ')</title>';
+      // Record number label
+      svgContent += '<text x="' + (cx+8) + '" y="' + (cy+3) + '" fill="' + color + '" font-family="Noto Sans Mono,monospace" font-size="9" font-weight="600">#' + (p.idx+1) + '</text>';
+    });
+
+    svg.innerHTML = svgContent;
   }
 
   /* ==================================================================
