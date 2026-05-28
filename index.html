@@ -298,45 +298,8 @@
   'use strict';
 
   /* ==================================================================
-   *  装置世界地图 — 简化大陆轮廓 & 交互式标记
+   *  装置世界地图 — Natural Earth 110m 海岸线 + 交互式标记
    * ================================================================ */
-
-  /* ---- 大陆轮廓 (极度简化, ≈15-25 点/洲) ----
-   *  格式: [经度, 纬度]
-   */
-  var CONTINENTS = {
-    '北美洲': [
-      [-55,48],[-65,43],[-75,35],[-80,25],[-88,30],[-97,26],[-98,22],[-105,20],[-110,30],[-115,33],[-120,35],[-124,48],
-      [-130,55],[-145,60],[-160,58],[-168,65],[-165,72],[-150,72],[-135,70],[-120,72],[-100,72],[-85,72],[-75,68],[-70,60],[-68,52],[-60,48],[-55,48]
-    ],
-    '南美洲': [
-      [-80,10],[-60,5],[-50,5],[-35,5],[-35,-8],[-37,-15],[-40,-22],[-45,-28],[-50,-30],[-55,-35],[-58,-38],[-65,-50],[-68,-55],[-72,-50],[-75,-45],[-75,-30],[-70,-18],[-75,-5],[-78,-2],[-80,10]
-    ],
-    '欧洲': [
-      [-10,36],[-10,44],[0,44],[5,48],[8,55],[5,58],[8,62],[10,65],[12,68],[20,70],[30,70],[32,62],[30,50],[28,42],[25,38],[20,40],[15,40],[10,44],[5,44],[-5,43],[-10,36]
-    ],
-    '非洲': [
-      [-17,15],[-17,20],[-15,25],[-10,30],[-5,36],[5,37],[10,37],[12,33],[25,32],[35,30],[40,12],[50,12],[50,2],[45,-10],[40,-20],[35,-30],[30,-33],[25,-34],[20,-35],[15,-25],[10,-5],[10,5],[5,10],[0,15],[-5,20],[-10,15],[-17,15]
-    ],
-    '亚洲': [
-      [30,30],[35,30],[40,40],[50,50],[55,55],[60,60],[70,65],[80,72],[100,75],[120,75],[130,70],[140,60],[145,50],[140,45],[130,35],[120,30],[110,20],[105,10],[100,15],[95,5],[80,10],[70,25],[60,30],[50,30],[40,28],[30,30]
-    ],
-    '澳大利亚': [
-      [115,-22],[128,-12],[135,-12],[145,-15],[150,-22],[153,-26],[150,-35],[140,-38],[130,-35],[115,-32],[113,-28],[115,-22]
-    ],
-    '格陵兰': [
-      [-55,65],[-45,60],[-22,60],[-18,70],[-22,82],[-52,83],[-55,65]
-    ],
-    '英国/爱尔兰': [
-      [-8,50],[-5,50],[-1,50.5],[2,51.5],[1,53],[-3,55],[-5,56],[-7,54],[-8,50]
-    ],
-    '日本': [
-      [130,31],[132,30],[134,33],[138,36],[140,35],[142,40],[140,45],[138,44],[135,42],[133,38],[132,34],[130,31]
-    ],
-    '东南亚岛屿': [
-      [98,5],[105,2],[110,-5],[115,-5],[120,-5],[125,-5],[125,-8],[120,-8],[115,-5],[108,-5],[100,-2],[98,5]
-    ]
-  };
 
   /* ---- 装置数据 (名称, 经度, 纬度, 链接, 状态标记) ---- */
   var DEVICES = [
@@ -383,135 +346,116 @@
     retired:  '🛑 已退役'
   };
 
+  /* ---- 地图渲染 ---- */
   function renderMap() {
     var svg = document.getElementById('world-map');
     if (!svg) return;
     var ns = 'http://www.w3.org/2000/svg';
     svg.innerHTML = '';
-
-    // ---- 1. 大陆轮廓 ----
-    Object.keys(CONTINENTS).forEach(function(cname) {
-      var pts = CONTINENTS[cname];
-      var d = 'M ' + pts.map(function(p) { return p[0] + ',' + (-p[1]); }).join(' L ') + ' Z';
-      var path = document.createElementNS(ns, 'path');
-      path.setAttribute('d', d);
-      path.setAttribute('fill', '#d5d8d3');
-      path.setAttribute('stroke', '#b8bbb6');
-      path.setAttribute('stroke-width', '0.3');
-      path.setAttribute('stroke-linejoin', 'round');
-      svg.appendChild(path);
-    });
-
-    // ---- 2. 经纬网格线 ----
-    var gridGroup = document.createElementNS(ns, 'g');
-    gridGroup.setAttribute('stroke', '#e0e2df');
-    gridGroup.setAttribute('stroke-width', '0.2');
-    // 经线 (每隔 30°)
-    for (var lon = -180; lon <= 180; lon += 30) {
-      var line = document.createElementNS(ns, 'line');
-      line.setAttribute('x1', lon); line.setAttribute('y1', -85);
-      line.setAttribute('x2', lon); line.setAttribute('y2', 85);
-      gridGroup.appendChild(line);
-    }
-    // 纬线 (每隔 30°)
-    for (var lat = -60; lat <= 60; lat += 30) {
-      var line = document.createElementNS(ns, 'line');
-      line.setAttribute('x1', -175); line.setAttribute('y1', -lat);
-      line.setAttribute('x2', 175); line.setAttribute('y2', -lat);
-      gridGroup.appendChild(line);
-    }
-    svg.appendChild(gridGroup);
-
-    // ---- 3. 赤道高亮 ----
-    var eq = document.createElementNS(ns, 'line');
-    eq.setAttribute('x1', -178); eq.setAttribute('y1', 0);
-    eq.setAttribute('x2', 178); eq.setAttribute('y2', 0);
-    eq.setAttribute('stroke', '#c8ccc8'); eq.setAttribute('stroke-width', '0.4');
-    eq.setAttribute('stroke-dasharray', '2,3');
-    svg.appendChild(eq);
-
-    // ---- 4. 装置标记 ----
     var tooltip = document.getElementById('map-tooltip');
     var container = document.getElementById('map-container');
 
-    DEVICES.forEach(function(d) {
-      var g = document.createElementNS(ns, 'g');
-      g.setAttribute('class', 'device-marker');
-      g.style.cursor = 'pointer';
-
-      var cx = d.lon, cy = -d.lat;
-
-      // 光晕 (hover 时显示)
-      var halo = document.createElementNS(ns, 'circle');
-      halo.setAttribute('cx', cx); halo.setAttribute('cy', cy);
-      halo.setAttribute('r', '10'); halo.setAttribute('opacity', '0');
-      var sc = STATUS_COLORS[d.status] || STATUS_COLORS.active;
-      halo.setAttribute('fill', sc.fill);
-      halo.style.transition = 'opacity 0.2s';
-      g.appendChild(halo);
-
-      // 主标记圆
-      var circle = document.createElementNS(ns, 'circle');
-      circle.setAttribute('cx', cx); circle.setAttribute('cy', cy);
-      circle.setAttribute('r', '4.5');
-      circle.setAttribute('fill', sc.fill);
-      circle.setAttribute('stroke', sc.stroke);
-      circle.setAttribute('stroke-width', '1.5');
-      circle.style.transition = 'r 0.15s, stroke-width 0.15s';
-      g.appendChild(circle);
-
-      // 点击区域 (透明大圆提升点击精度)
-      var hit = document.createElementNS(ns, 'circle');
-      hit.setAttribute('cx', cx); hit.setAttribute('cy', cy);
-      hit.setAttribute('r', '12'); hit.setAttribute('fill', 'transparent');
-      g.appendChild(hit);
-
-      // ---- 事件 ----
-      g.addEventListener('mouseenter', function(e) {
-        circle.setAttribute('r', '7');
-        circle.setAttribute('stroke-width', '2.5');
-        halo.setAttribute('opacity', '0.2');
-        tooltip.innerHTML = '<div style="font-weight:600;margin-bottom:2px;">' + d.name + '</div>'
-          + '<div style="font-size:0.76rem;opacity:0.8;">' + d.org + '</div>'
-          + '<div style="font-size:0.76rem;margin-top:2px;">' + (STATUS_LABELS[d.status]||'') + '</div>';
-        tooltip.style.display = 'block';
-        positionTooltip(e);
-      });
-
-      g.addEventListener('mousemove', function(e) {
-        positionTooltip(e);
-      });
-
-      g.addEventListener('mouseleave', function() {
-        circle.setAttribute('r', '4.5');
-        circle.setAttribute('stroke-width', '1.5');
-        halo.setAttribute('opacity', '0');
-        tooltip.style.display = 'none';
-      });
-
-      g.addEventListener('click', function() {
-        window.location.href = d.href;
-      });
-
-      svg.appendChild(g);
-    });
-
-    function positionTooltip(e) {
-      var rect = container.getBoundingClientRect();
-      var x = e.clientX - rect.left + 14;
-      var y = e.clientY - rect.top - 10;
-      // Keep tooltip in bounds
-      var tw = tooltip.offsetWidth || 200;
-      var th = tooltip.offsetHeight || 60;
-      if (x + tw > rect.width - 10) x = e.clientX - rect.left - tw - 14;
-      if (y + th > rect.height - 10) y = rect.height - th - 10;
-      if (y < 10) y = 10;
-      tooltip.style.left = x + 'px';
-      tooltip.style.top = y + 'px';
+    // ---- 经纬网格 ----
+    var gridG = svg.appendChild(document.createElementNS(ns, 'g'));
+    gridG.setAttribute('stroke', '#e0e2df'); gridG.setAttribute('stroke-width', '0.2');
+    for (var lon = -180; lon <= 180; lon += 30) {
+      var l = document.createElementNS(ns, 'line');
+      l.setAttribute('x1', lon); l.setAttribute('y1', -85);
+      l.setAttribute('x2', lon); l.setAttribute('y2', 85);
+      gridG.appendChild(l);
     }
+    for (var lat = -60; lat <= 60; lat += 30) {
+      var l = document.createElementNS(ns, 'line');
+      l.setAttribute('x1', -175); l.setAttribute('y1', -lat);
+      l.setAttribute('x2', 175); l.setAttribute('y2', -lat);
+      gridG.appendChild(l);
+    }
+
+    // ---- 海岸线 (加载自外置数据) ----
+    var coastPath = svg.appendChild(document.createElementNS(ns, 'path'));
+    coastPath.setAttribute('fill', '#d5d8d3');
+    coastPath.setAttribute('stroke', '#b8bbb6');
+    coastPath.setAttribute('stroke-width', '0.3');
+    coastPath.setAttribute('stroke-linejoin', 'round');
+
+    function placeMarkers() {
+      var sc = STATUS_COLORS;
+      DEVICES.forEach(function(d) {
+        var g = document.createElementNS(ns, 'g');
+        g.style.cursor = 'pointer';
+        var cx = d.lon, cy = -d.lat;
+        var color = sc[d.status] || sc.active;
+
+        var halo = g.appendChild(document.createElementNS(ns, 'circle'));
+        halo.setAttribute('cx',cx); halo.setAttribute('cy',cy);
+        halo.setAttribute('r',12); halo.setAttribute('fill',color.fill);
+        halo.setAttribute('opacity','0'); halo.style.transition='opacity 0.2s';
+
+        var c = g.appendChild(document.createElementNS(ns, 'circle'));
+        c.setAttribute('cx',cx); c.setAttribute('cy',cy);
+        c.setAttribute('r',4.5); c.setAttribute('fill',color.fill);
+        c.setAttribute('stroke',color.stroke); c.setAttribute('stroke-width',1.5);
+        c.style.transition='r 0.15s';
+
+        // 点击区域
+        var hit = g.appendChild(document.createElementNS(ns, 'circle'));
+        hit.setAttribute('cx',cx); hit.setAttribute('cy',cy);
+        hit.setAttribute('r',14); hit.setAttribute('fill','transparent');
+
+        g.addEventListener('mouseenter', function() {
+          c.setAttribute('r',7.5); c.setAttribute('stroke-width',2.5);
+          halo.setAttribute('opacity','0.25');
+          tooltip.innerHTML = '<div style="font-weight:600;margin-bottom:2px;">'+d.name+'</div>'
+            +'<div style="font-size:0.76rem;opacity:0.8;">'+d.org+'</div>'
+            +'<div style="font-size:0.76rem;margin-top:2px;">'+(STATUS_LABELS[d.status]||'')+'</div>';
+          tooltip.style.display='block';
+        });
+        g.addEventListener('mousemove', function(e) {
+          var r = container.getBoundingClientRect();
+          var x = e.clientX - r.left + 16, y = e.clientY - r.top - 12;
+          var tw = Math.min(tooltip.offsetWidth||200, 220);
+          var th = tooltip.offsetHeight||60;
+          if (x+tw > r.width-8) x = e.clientX - r.left - tw - 16;
+          if (y+th > r.height-8) y = r.height - th - 8;
+          if (y < 8) y = 8;
+          tooltip.style.left = x+'px'; tooltip.style.top = y+'px';
+        });
+        g.addEventListener('mouseleave', function() {
+          c.setAttribute('r',4.5); c.setAttribute('stroke-width',1.5);
+          halo.setAttribute('opacity','0');
+          tooltip.style.display='none';
+        });
+        g.addEventListener('click', function() { window.location.href = d.href; });
+        svg.appendChild(g);
+      });
+    }
+
+    // 异步加载海岸线数据
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'data/world-coastlines.json', true);
+    xhr.onload = function() {
+      if (xhr.status !== 200) { placeMarkers(); return; }
+      try {
+        var rings = JSON.parse(xhr.responseText);
+        var d = '';
+        for (var i = 0; i < rings.length; i++) {
+          var ring = rings[i];
+          if (ring.length < 10) continue;
+          d += 'M ';
+          for (var j = 0; j < ring.length; j++) {
+            d += ring[j][0].toFixed(2) + ',' + (-ring[j][1]).toFixed(2);
+            if (j < ring.length - 1) d += ' L ';
+          }
+          d += ' Z ';
+        }
+        coastPath.setAttribute('d', d);
+      } catch(e) { /* fallback: no coastlines */ }
+      placeMarkers();
+    };
+    xhr.onerror = placeMarkers;
+    xhr.send();
   }
 
-  // ---- 入口 ----
   window.addEventListener('DOMContentLoaded', renderMap);
   window.addEventListener('resize', renderMap);
   </script>
