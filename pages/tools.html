@@ -2061,38 +2061,45 @@
     return Math.max(L, 0);
   }
 
-  /* ---- Mutual inductance between two coaxial coils (改进) ----
-   *  细导线椭圆积分公式 + GMD 有效半径修正
-   *  R_eff = R + ΔR²/(24R)   (有限宽度对磁通耦合的平均效应)
-   *  k_eff = √(4R₁_eff·R₂_eff / ((R₁_eff+R₂_eff)² + d²))
+  /* ---- Mutual inductance between two coaxial coils ----
+   *  标准公式: M = μ₀√(R₁R₂) × [(2/k−k)K(k) − (2/k)E(k)]
+   *  有限截面修正: 将 d_eff = √(d² + r_g²) 代入 k, 避免 K(k) 发散
+   *     + r_g = 线圈截面等效半径, 确保 d=0 时 M → L 而非发散
+   *     + R_eff = R + ΔR²/(24R)
+   *  物理约束: M ≤ √(L₁·L₂)
    * ================================================================ */
-  function coilMutualInductance(R1, Z1, R2, Z2, dR1, dR2) {
+  function coilMutualInductance(R1, Z1, R2, Z2, dR1, dZ1, dR2, dZ2) {
     if (R1 <= 0 || R2 <= 0) return 0;
 
     // 有效半径修正 (有限截面)
-    var R1e = R1, R2e = R2;
-    if (dR1 && dR1 > 0) R1e = R1 + dR1 * dR1 / (24 * R1);
-    if (dR2 && dR2 > 0) R2e = R2 + dR2 * dR2 / (24 * R2);
+    var R1e = R1; if (dR1 && dR1 > 0) R1e = R1 + dR1 * dR1 / (24 * R1);
+    var R2e = R2; if (dR2 && dR2 > 0) R2e = R2 + dR2 * dR2 / (24 * R2);
 
-    var d = Math.abs(Z1 - Z2);
-    var sumR = R1e + R2e;
-    var denom = sumR * sumR + d * d;
-    var k = Math.sqrt(4 * R1e * R2e / denom);
+    // 有效间距: 引入截面 GMD 避免 K(k) 发散
+    // 取两线圈 GMD 的较小值的一半, 使重合时 M 更接近 L
+    var d  = Math.abs(Z1 - Z2);
+    var r_g1 = (dR1 && dZ1) ? gmdRect(dR1, dZ1) : 0.01;
+    var r_g2 = (dR2 && dZ2) ? gmdRect(dR2, dZ2) : 0.01;
+    var r_g_min = Math.min(r_g1, r_g2);
+    var d_eff = Math.sqrt(d * d + r_g_min * r_g_min * 0.25);
 
-    if (k >= 0.999999) {
-      // 几乎同轴的极限情况
-      if (d < 1e-12 && Math.abs(R1e - R2e) < 1e-12) {
-        // 完全重合 → 等于自感
-        return coilSelfInductance(R1, dR1 || 0.1, 0.1, 'rect');
-      }
-      return MU0 * Math.sqrt(R1e * R2e) *
-             (Math.log(8 * Math.sqrt(R1e * R2e) / Math.sqrt(d*d + (R1e-R2e)*(R1e-R2e))) - 2);
-    }
-    if (k <= 0) return 0;
+    // 修正后的 k
+    var k2 = 4 * R1e * R2e / ((R1e + R2e) * (R1e + R2e) + d_eff * d_eff);
+    if (k2 <= 0) return 0;
+    var k = Math.sqrt(k2);
+
+    // 物理上限
+    var L1 = coilSelfInductance(R1, dR1 || 0.1, dZ1 || dR1 || 0.1, 'rect');
+    var L2 = coilSelfInductance(R2, dR2 || 0.1, dZ2 || dR2 || 0.1, 'rect');
+    var M_max = Math.sqrt(L1 * L2);
+
+    // 标准椭圆积分公式 (全程使用, d_eff 修正避免发散)
     var Kk = ellipK(k);
     var Ek = ellipE(k);
     var factor = (2/k - k) * Kk - (2/k) * Ek;
-    return MU0 * Math.sqrt(R1e * R2e) * factor;
+    var M = MU0 * Math.sqrt(R1e * R2e) * factor;
+
+    return Math.min(Math.max(M, 0), M_max * 0.9999);
   }
 
   function calcCoilInductance() {
@@ -2131,7 +2138,7 @@
         if (i === j) {
           M[i][j] = Lself[i];
         } else if (j > i) {
-          M[i][j] = coilMutualInductance(coils[i].R, coils[i].Z, coils[j].R, coils[j].Z, coils[i].dR, coils[j].dR);
+          M[i][j] = coilMutualInductance(coils[i].R, coils[i].Z, coils[j].R, coils[j].Z, coils[i].dR, coils[i].dZ, coils[j].dR, coils[j].dZ);
         } else {
           M[i][j] = M[j][i];  // symmetric
         }
