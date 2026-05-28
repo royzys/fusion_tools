@@ -965,6 +965,16 @@
                 <span class="unit-label">MW</span>
               </div>
             </div>
+            <div class="param-group">
+              <label>H 因子 H<sub>98</sub>
+                <span class="tip-icon">?</span>
+                <span class="tip-text">τ_E_meas/τ_E_IPB98y。H=1 为定标率预测值。先进托卡马克 H≈1.2–1.6, ITER 基准 H=0.85–1.0。</span>
+              </label>
+              <div class="input-unit">
+                <input type="number" id="p-H" step="any" value="1.0">
+                <span class="unit-label">—</span>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1072,7 +1082,7 @@
             <div class="result-panel-body">
               <div class="formula-box">
                 τ<sub>E</sub><sup>IPB98(y)</sup> = 0.0562 · I<sub>p</sub><sup>0.93</sup> · B<sub>t</sub><sup>0.15</sup> · P<sup>−0.69</sup> · n<sub>19</sub><sup>0.41</sup> · M<sup>0.19</sup> · R<sup>1.97</sup> · ε<sup>0.58</sup> · κ<sup>0.78</sup>
-                <span class="fnote">⟨σv⟩<sub>DT</sub>: Bosch‑Hale 参数化 &emsp; E<sub>fus</sub> = 17.6 MeV &emsp; 燃料假设: 50‑50 D‑T</span>
+                <span class="fnote">⟨σv⟩<sub>DT</sub>: Bosch‑Hale 参数化 &emsp; E<sub>fus</sub> = 17.6 MeV &emsp; n<sub>G</sub> = I<sub>p</sub>/(πa²) (Greenwald)</span>
               </div>
               <div class="output-area" id="out-fx"></div>
             </div>
@@ -1151,6 +1161,10 @@
               <button class="btn-compare primary" onclick="recordSnapshot()">📝 记录当前结果</button>
               <button class="btn-compare danger" onclick="clearAllRecords()">🗑 清空所有记录</button>
               <button class="btn-compare" style="background:var(--accent-subtle);color:var(--text);" onclick="exportCSV()">📥 导出 CSV</button>
+              <span style="position:relative;">
+                <button class="btn-compare" style="background:var(--surface);color:var(--text-secondary);border:1px solid var(--tool-border);" onclick="toggleColSelector()">⚙ 列选择</button>
+                <div id="col-selector" style="display:none;position:absolute;top:100%;right:0;z-index:20;background:var(--tool-bg);border:1px solid var(--tool-border);border-radius:var(--radius);padding:10px 14px;min-width:180px;box-shadow:0 6px 20px rgba(0,0,0,0.12);max-height:300px;overflow-y:auto;"></div>
+              </span>
               <span class="record-count" id="cmp-count">0 条记录</span>
             </div>
 
@@ -1288,6 +1302,7 @@
     var li    = gv('p-li');
     var Zeff  = gv('p-Zeff');
     var Paux  = gv('p-Paux');
+    var H98   = gv('p-H', 1.0);
     var ion   = gs('p-ion');
 
     var mi = ION_MASSES[ion] || (2.014 * M_P);
@@ -1456,15 +1471,28 @@
       var Vloop = 2 * Math.PI * R * 3e-8 * ne * Zeff / Math.pow(Te, 1.5);  // very rough
       var P_OH = Vloop * (Ip * 1e6) / 1e6;                                 // MW
 
+      // H-factor 调整
+      var tauE_eff = tauE * H98;
+
+      // Greenwald 密度极限 n_G = I_p / (πa²)  [10²⁰ m⁻³]
+      var n_G = Ip / (Math.PI * a * a);
+      var n_ratio = (n_G > 0) ? (ne / n_G) : 0;
+
+      // nTτE 用有效 τ_E
+      var ntT_eff = ne * Ti * tauE_eff;
+
       var rows = [
-        { label: 'V (等离子体体积)',       value: V.toFixed(1),      unit: 'm³' },
-        { label: 'τ_E (IPB98y)',           value: tauE.toFixed(3),   unit: 's', highlight: true },
+        { label: 'V (等离子体体积)',        value: V.toFixed(1),       unit: 'm³' },
+        { label: 'n_G (Greenwald 极限)',    value: n_G.toFixed(3),     unit: '10²⁰ m⁻³' },
+        { label: 'n/n_G (密度占比)',        value: (n_ratio*100).toFixed(1), unit: '%', warn: n_ratio > 0.85 },
+        { label: 'τ_E (IPB98y, H=1)',      value: tauE.toFixed(3),    unit: 's' },
+        { label: 'τ_E_eff (H=' + H98.toFixed(2) + ')', value: tauE_eff.toFixed(3), unit: 's', highlight: true },
         { label: '⟨σv⟩_DT (聚变反应率)',   value: sigmaV.toExponential(2), unit: 'm³/s' },
         { label: 'P_fus (聚变功率)',       value: Pfus_MW.toFixed(1), unit: 'MW', highlight: true },
-        { label: 'Q (聚变增益)',           value: Q.toFixed(2),      unit: '', highlight: true },
-        { label: 'nTτ_E (三乘积)',         value: ntT.toFixed(4),    unit: '10²⁰·m⁻³·keV·s' },
+        { label: 'Q (聚变增益)',           value: Q.toFixed(2),       unit: '', highlight: true },
+        { label: 'nTτ_E (三乘积)',         value: ntT_eff.toFixed(4), unit: '10²⁰·m⁻³·keV·s' },
         { label: 'p_fus (聚变功率密度)',   value: (p_fus*1e3).toFixed(2), unit: 'kW/m³' },
-        { label: 'P_OH (欧姆加热, 估算)',  value: P_OH.toFixed(2),   unit: 'MW' }
+        { label: 'P_OH (欧姆加热, 估算)',  value: P_OH.toFixed(2),    unit: 'MW' }
       ];
       renderOutput('out-fx', rows);
     } else {
@@ -1745,6 +1773,93 @@
     renderComparisonTable();
   }
 
+  /* ---- Column visibility for comparison table ---- */
+  var COL_VIS_KEY = 'fusion-tools-cols';
+  var colVisibility = {};  // { paramName/outKey: true/false }
+
+  function saveColVisibility() {
+    try { localStorage.setItem(COL_VIS_KEY, JSON.stringify(colVisibility)); } catch(e) {}
+  }
+
+  function loadColVisibility() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(COL_VIS_KEY));
+      if (saved) colVisibility = saved;
+    } catch(e) {}
+  }
+
+  function isColVisible(key, defaultValue) {
+    if (colVisibility.hasOwnProperty(key)) return colVisibility[key];
+    return defaultValue !== undefined ? defaultValue : true;
+  }
+
+  function toggleColSelector() {
+    var el = document.getElementById('col-selector');
+    if (!el) return;
+    if (el.style.display !== 'block') {
+      buildColSelector();
+      el.style.display = 'block';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  function buildColSelector() {
+    if (cmpRecords.length === 0) return;
+    var el = document.getElementById('col-selector');
+    if (!el) return;
+
+    // Collect all possible columns from records
+    var allParams = ['R','a','Bt','Ip','ne','Te','Ti','kappa','li','Zeff'];
+    var paramLabels = {R:'R', a:'a', Bt:'Bt', Ip:'Ip', ne:'ne', Te:'Te', Ti:'Ti', kappa:'κ', li:'lᵢ', Zeff:'Z_eff'};
+    var allOutKeys = [];
+    var outColDef = {
+      Lp:'Lp(μH)', fce:'f_ce(GHz)', fci:'f_ci(MHz)', fpe:'f_pe(GHz)',
+      eta:'η∥(Ω·m)', bt:'βt(%)', bN:'βN', q95:'q_95', rho:'ρ_L(mm)',
+      tauE:'τ_E(s)', Pfus:'P_fus(MW)', Qval:'Q'
+    };
+    var toolKeys = {lp:['Lp'],fr:['fce','fci','fpe'],sp:['eta'],
+      bt:['bt','bN'],q:['q95'],lr:['rho'],fx:['tauE','Pfus','Qval']};
+
+    cmpRecords.forEach(function(rec) {
+      (rec.tools||[]).forEach(function(t) {
+        (toolKeys[t]||[]).forEach(function(k) {
+          if (allOutKeys.indexOf(k)===-1) allOutKeys.push(k);
+        });
+      });
+    });
+
+    var html = '<div style="font-size:0.78rem;font-weight:600;color:var(--text-tertiary);margin-bottom:6px;">显示列</div>';
+
+    // Parameter columns
+    allParams.forEach(function(p) {
+      var checked = isColVisible(p, p==='kappa'||p==='li'||p==='Zeff' ? false : true) ? 'checked' : '';
+      html += '<label style="display:block;font-size:0.78rem;padding:3px 0;cursor:pointer;">' +
+        '<input type="checkbox" ' + checked + ' onchange="toggleCol(\'' + p + '\')" style="margin-right:5px;">' +
+        (paramLabels[p]||p) + '</label>';
+    });
+
+    if (allOutKeys.length > 0) {
+      html += '<div style="border-top:1px solid var(--tool-border);margin:6px 0 4px;"></div>';
+      allOutKeys.forEach(function(k) {
+        var checked = isColVisible(k, true) ? 'checked' : '';
+        html += '<label style="display:block;font-size:0.78rem;padding:3px 0;cursor:pointer;">' +
+          '<input type="checkbox" ' + checked + ' onchange="toggleCol(\'' + k + '\')" style="margin-right:5px;">' +
+          (outColDef[k]||k) + '</label>';
+      });
+    }
+
+    el.innerHTML = html;
+  }
+
+  function toggleCol(key) {
+    colVisibility[key] = !colVisibility[key];
+    saveColVisibility();
+    renderComparisonTable();
+    // Rebuild selector with updated state
+    buildColSelector();
+  }
+
   function renderComparisonTable() {
     var wrapper = document.getElementById('cmp-table-wrapper');
     var thead   = document.getElementById('cmp-thead');
@@ -1808,14 +1923,21 @@
       });
     });
 
+    // Filter columns by visibility
+    function filterVisible(arr) {
+      return arr.filter(function(k) { return isColVisible(k, true); });
+    }
+    var visParams = filterVisible(params);
+    var visOutCols = filterVisible(allOutCols);
+
     // Render <thead>
     var theadHtml = '<tr>';
     theadHtml += '<th class="param-col">#</th>';
-    params.forEach(function(p) {
+    visParams.forEach(function(p) {
       var unit = paramUnits[p] ? '<br><span style="font-weight:400;font-size:0.65rem;color:var(--text-tertiary)">' + paramUnits[p] + '</span>' : '';
       theadHtml += '<th class="param-col">' + paramLabels[p] + unit + '</th>';
     });
-    allOutCols.forEach(function(k) {
+    visOutCols.forEach(function(k) {
       var d = outColDef[k];
       var unit = d && d.unit ? '<br><span style="font-weight:400;font-size:0.65rem;color:var(--text-tertiary)">' + d.unit + '</span>' : '';
       theadHtml += '<th class="output-col">' + (d ? d.label : k) + unit + '</th>';
@@ -1832,13 +1954,13 @@
       var o = rec.outputs || {};
       tblHtml += '<tr>';
       tblHtml += '<td style="font-weight:600;color:var(--text-secondary)">' + (i + 1) + '</td>';
-      params.forEach(function(k) {
+      visParams.forEach(function(k) {
         var v = p[k];
         var display = v !== undefined && v !== null && v !== '' ? v : '—';
         if (typeof display === 'number') display = parseFloat(display.toFixed(4));
         tblHtml += '<td>' + display + '</td>';
       });
-      allOutCols.forEach(function(k) {
+      visOutCols.forEach(function(k) {
         var v = o[k];
         tblHtml += '<td>' + (v !== undefined && v !== null ? v : '—') + '</td>';
       });
@@ -2205,6 +2327,7 @@
   window.addEventListener('DOMContentLoaded', function() {
     bindToggles();
     loadRecords();
+    loadColVisibility();
     renderComparisonTable();
     recalc();
     initCoilRows();
