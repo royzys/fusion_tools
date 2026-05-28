@@ -495,7 +495,7 @@
   ];
 
   /* ---- 标记大小: 缩小尺寸减少重叠 ---- */
-  var SIZE_R = { large: 4, medium: 3, small: 2.5 };
+  var SIZE_R = { large: 3, medium: 2.2, small: 1.5 };
 
   /* ---- 状态颜色 ---- */
   var STATUS_COLORS = {
@@ -560,7 +560,6 @@
         var c = g.appendChild(document.createElementNS(ns, 'circle'));
         c.setAttribute('cx',cx); c.setAttribute('cy',cy);
         c.setAttribute('r', rB); c.setAttribute('fill',color);
-        c.setAttribute('stroke','rgba(255,255,255,0.8)'); c.setAttribute('stroke-width','0.8');
         c.style.transition='r 0.15s';
 
         // 点击区域
