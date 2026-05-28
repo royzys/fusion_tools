@@ -31,7 +31,18 @@
     </div>
 
     <div class="section-intro">
-      <p>以下装置按名称排列。点击卡片可查看详细的参数、物理成果与参考文献。</p>
+      <p>以下为装置列表与全球分布。点击地图标记或卡片可查看详细的参数、物理成果与参考文献。</p>
+    </div>
+
+    <!-- ====== Interactive World Map ====== -->
+    <div style="margin-bottom:40px;">
+      <h3 style="font-size:1.1rem;margin-bottom:12px;">装置分布地图</h3>
+      <div id="map-container" style="position:relative;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#f0f2f5;">
+        <svg id="world-map" width="100%" viewBox="-180 -90 360 180" preserveAspectRatio="xMidYMid meet" style="display:block;">
+        </svg>
+        <!-- Tooltip -->
+        <div id="map-tooltip" style="display:none;position:absolute;padding:8px 12px;background:#2d2a24;color:#fff;border-radius:6px;font-size:0.82rem;line-height:1.5;pointer-events:none;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.2);max-width:220px;"></div>
+      </div>
     </div>
 
     <div class="device-grid">
@@ -282,5 +293,227 @@
   <footer>
     <p>数据来源详见各装置研究文件（research/device-*.md）及零维参数表的参考文献。部分装置的详细研究页面还在创建中。</p>
   </footer>
+
+  <script>
+  'use strict';
+
+  /* ==================================================================
+   *  装置世界地图 — 简化大陆轮廓 & 交互式标记
+   * ================================================================ */
+
+  /* ---- 大陆轮廓 (极度简化, ≈15-25 点/洲) ----
+   *  格式: [经度, 纬度]
+   */
+  var CONTINENTS = {
+    '北美洲': [
+      [-55,48],[-65,43],[-75,35],[-80,25],[-88,30],[-97,26],[-98,22],[-105,20],[-110,30],[-115,33],[-120,35],[-124,48],
+      [-130,55],[-145,60],[-160,58],[-168,65],[-165,72],[-150,72],[-135,70],[-120,72],[-100,72],[-85,72],[-75,68],[-70,60],[-68,52],[-60,48],[-55,48]
+    ],
+    '南美洲': [
+      [-80,10],[-60,5],[-50,5],[-35,5],[-35,-8],[-37,-15],[-40,-22],[-45,-28],[-50,-30],[-55,-35],[-58,-38],[-65,-50],[-68,-55],[-72,-50],[-75,-45],[-75,-30],[-70,-18],[-75,-5],[-78,-2],[-80,10]
+    ],
+    '欧洲': [
+      [-10,36],[-10,44],[0,44],[5,48],[8,55],[5,58],[8,62],[10,65],[12,68],[20,70],[30,70],[32,62],[30,50],[28,42],[25,38],[20,40],[15,40],[10,44],[5,44],[-5,43],[-10,36]
+    ],
+    '非洲': [
+      [-17,15],[-17,20],[-15,25],[-10,30],[-5,36],[5,37],[10,37],[12,33],[25,32],[35,30],[40,12],[50,12],[50,2],[45,-10],[40,-20],[35,-30],[30,-33],[25,-34],[20,-35],[15,-25],[10,-5],[10,5],[5,10],[0,15],[-5,20],[-10,15],[-17,15]
+    ],
+    '亚洲': [
+      [30,30],[35,30],[40,40],[50,50],[55,55],[60,60],[70,65],[80,72],[100,75],[120,75],[130,70],[140,60],[145,50],[140,45],[130,35],[120,30],[110,20],[105,10],[100,15],[95,5],[80,10],[70,25],[60,30],[50,30],[40,28],[30,30]
+    ],
+    '澳大利亚': [
+      [115,-22],[128,-12],[135,-12],[145,-15],[150,-22],[153,-26],[150,-35],[140,-38],[130,-35],[115,-32],[113,-28],[115,-22]
+    ],
+    '格陵兰': [
+      [-55,65],[-45,60],[-22,60],[-18,70],[-22,82],[-52,83],[-55,65]
+    ],
+    '英国/爱尔兰': [
+      [-8,50],[-5,50],[-1,50.5],[2,51.5],[1,53],[-3,55],[-5,56],[-7,54],[-8,50]
+    ],
+    '日本': [
+      [130,31],[132,30],[134,33],[138,36],[140,35],[142,40],[140,45],[138,44],[135,42],[133,38],[132,34],[130,31]
+    ],
+    '东南亚岛屿': [
+      [98,5],[105,2],[110,-5],[115,-5],[120,-5],[125,-5],[125,-8],[120,-8],[115,-5],[108,-5],[100,-2],[98,5]
+    ]
+  };
+
+  /* ---- 装置数据 (名称, 经度, 纬度, 链接, 状态标记) ---- */
+  var DEVICES = [
+    {id:'alcator',  name:'Alcator C‑Mod',         lon:-71.09, lat:42.36, href:'../research/device-alcator-cmod.md', org:'MIT PSFC', status:'retired'},
+    {id:'asdex',    name:'ASDEX Upgrade',          lon:11.67,  lat:48.26, href:'../research/device-asdex-u.md',     org:'IPP Garching', status:'active'},
+    {id:'compass',  name:'COMPASS‑U',              lon:14.47,  lat:50.08, href:'../research/device-compass-u.md',   org:'IPP CAS, Prague', status:'building'},
+    {id:'diiid',    name:'DIII‑D',                 lon:-117.23,lat:32.88, href:'../research/device-diiid.md',      org:'GA, San Diego', status:'active'},
+    {id:'east',     name:'EAST',                   lon:117.28, lat:31.85, href:'../research/device-east.md',      org:'ASIPP, Hefei', status:'active'},
+    {id:'hl2m',     name:'HL‑2M/HL‑3',             lon:103.99, lat:30.57, href:'../research/device-hl2m.md',      org:'SWIP, Chengdu', status:'active'},
+    {id:'hsx',      name:'HSX',                    lon:-89.41, lat:43.07, href:'../research/device-hsx.md',       org:'UW‑Madison', status:'active'},
+    {id:'iter',     name:'ITER',                   lon:5.76,   lat:43.69, href:'../research/device-iter.md',      org:'Cadarache', status:'building'},
+    {id:'jet',      name:'JET',                    lon:-1.23,  lat:51.66, href:'../research/device-jet.md',       org:'Culham', status:'retired'},
+    {id:'jt60u',    name:'JT‑60U',                 lon:140.48, lat:36.46, href:'../research/device-jt60.md',      org:'JAEA, Naka', status:'retired'},
+    {id:'jt60sa',   name:'JT‑60SA',                lon:140.48, lat:36.46, href:'../research/device-jt60sa.md',    org:'Naka', status:'active'},
+    {id:'kstar',    name:'KSTAR',                  lon:127.38, lat:36.36, href:'../research/device-kstar.md',     org:'KFE, Daejeon', status:'active'},
+    {id:'lhd',      name:'LHD',                    lon:137.18, lat:35.35, href:'../research/device-lhd.md',       org:'NIFS, Toki', status:'active'},
+    {id:'mastu',    name:'MAST Upgrade',           lon:-1.23,  lat:51.66, href:'../research/device-mast-u.md',    org:'Culham', status:'active'},
+    {id:'nstxu',    name:'NSTX‑U',                 lon:-74.65, lat:40.35, href:'../research/device-nstxu.md',     org:'PPPL, Princeton', status:'active'},
+    {id:'sparc',    name:'SPARC',                  lon:-71.61, lat:42.53, href:'../research/device-sparc.md',     org:'CFS, Devens', status:'building'},
+    {id:'tftr',     name:'TFTR',                   lon:-74.65, lat:40.35, href:'../research/device-tftr.md',      org:'PPPL, Princeton', status:'retired'},
+    {id:'tj2',      name:'TJ‑II',                  lon:-3.69,  lat:40.46, href:'../research/device-tj2.md',       org:'CIEMAT, Madrid', status:'active'},
+    {id:'w7x',      name:'W7‑X',                   lon:13.39,  lat:54.09, href:'../research/device-w7x.md',       org:'IPP, Greifswald', status:'active'},
+    {id:'west',     name:'WEST',                   lon:5.76,   lat:43.69, href:'../research/device-west.md',      org:'CEA, Cadarache', status:'active'},
+    {id:'ftu',      name:'FTU',                    lon:12.68,  lat:41.81, href:'../research/device-ftu.md',       org:'ENEA, Frascati', status:'retired'},
+    {id:'jtext',    name:'J‑TEXT',                 lon:114.32, lat:30.52, href:'../research/device-jtext.md',     org:'HUST, Wuhan', status:'active'},
+    {id:'plt',      name:'PLT',                    lon:-74.65, lat:40.35, href:'../research/device-plt.md',       org:'PPPL, Princeton', status:'retired'},
+    {id:'rfx',      name:'RFX‑mod',                lon:11.90,  lat:45.41, href:'../research/device-rfx-mod.md',   org:'Padova', status:'active'},
+    {id:'st40',     name:'ST40',                   lon:-1.26,  lat:51.75, href:'../research/device-st40.md',      org:'Tokamak Energy', status:'active'},
+    {id:'start',    name:'START',                  lon:-1.23,  lat:51.66, href:'../research/device-start.md',     org:'Culham', status:'retired'},
+    {id:'tcv',      name:'TCV',                    lon:6.57,   lat:46.52, href:'../research/device-tcv.md',       org:'EPFL, Lausanne', status:'active'},
+    {id:'t10',      name:'T‑10',                   lon:37.62,  lat:55.75, href:'../research/device-t10.md',       org:'Kurchatov, Moscow', status:'retired'},
+    {id:'textor',   name:'TEXTOR',                 lon:6.36,   lat:50.92, href:'../research/device-textor.md',    org:'FZ Jülich', status:'retired'}
+  ];
+
+  /* ---- 状态颜色 ---- */
+  var STATUS_COLORS = {
+    active:   { fill:'#4a8c6e', stroke:'#3a7a5e' },
+    building: { fill:'#b8913d', stroke:'#9a7a2d' },
+    retired:  { fill:'#8a857e', stroke:'#7a756e' }
+  };
+  var STATUS_LABELS = {
+    active:   '⚡ 运行中',
+    building: '⏳ 建设中/计划',
+    retired:  '🛑 已退役'
+  };
+
+  function renderMap() {
+    var svg = document.getElementById('world-map');
+    if (!svg) return;
+    var ns = 'http://www.w3.org/2000/svg';
+    svg.innerHTML = '';
+
+    // ---- 1. 大陆轮廓 ----
+    Object.keys(CONTINENTS).forEach(function(cname) {
+      var pts = CONTINENTS[cname];
+      var d = 'M ' + pts.map(function(p) { return p[0] + ',' + (-p[1]); }).join(' L ') + ' Z';
+      var path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('fill', '#d5d8d3');
+      path.setAttribute('stroke', '#b8bbb6');
+      path.setAttribute('stroke-width', '0.3');
+      path.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(path);
+    });
+
+    // ---- 2. 经纬网格线 ----
+    var gridGroup = document.createElementNS(ns, 'g');
+    gridGroup.setAttribute('stroke', '#e0e2df');
+    gridGroup.setAttribute('stroke-width', '0.2');
+    // 经线 (每隔 30°)
+    for (var lon = -180; lon <= 180; lon += 30) {
+      var line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', lon); line.setAttribute('y1', -85);
+      line.setAttribute('x2', lon); line.setAttribute('y2', 85);
+      gridGroup.appendChild(line);
+    }
+    // 纬线 (每隔 30°)
+    for (var lat = -60; lat <= 60; lat += 30) {
+      var line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', -175); line.setAttribute('y1', -lat);
+      line.setAttribute('x2', 175); line.setAttribute('y2', -lat);
+      gridGroup.appendChild(line);
+    }
+    svg.appendChild(gridGroup);
+
+    // ---- 3. 赤道高亮 ----
+    var eq = document.createElementNS(ns, 'line');
+    eq.setAttribute('x1', -178); eq.setAttribute('y1', 0);
+    eq.setAttribute('x2', 178); eq.setAttribute('y2', 0);
+    eq.setAttribute('stroke', '#c8ccc8'); eq.setAttribute('stroke-width', '0.4');
+    eq.setAttribute('stroke-dasharray', '2,3');
+    svg.appendChild(eq);
+
+    // ---- 4. 装置标记 ----
+    var tooltip = document.getElementById('map-tooltip');
+    var container = document.getElementById('map-container');
+
+    DEVICES.forEach(function(d) {
+      var g = document.createElementNS(ns, 'g');
+      g.setAttribute('class', 'device-marker');
+      g.style.cursor = 'pointer';
+
+      var cx = d.lon, cy = -d.lat;
+
+      // 光晕 (hover 时显示)
+      var halo = document.createElementNS(ns, 'circle');
+      halo.setAttribute('cx', cx); halo.setAttribute('cy', cy);
+      halo.setAttribute('r', '10'); halo.setAttribute('opacity', '0');
+      var sc = STATUS_COLORS[d.status] || STATUS_COLORS.active;
+      halo.setAttribute('fill', sc.fill);
+      halo.style.transition = 'opacity 0.2s';
+      g.appendChild(halo);
+
+      // 主标记圆
+      var circle = document.createElementNS(ns, 'circle');
+      circle.setAttribute('cx', cx); circle.setAttribute('cy', cy);
+      circle.setAttribute('r', '4.5');
+      circle.setAttribute('fill', sc.fill);
+      circle.setAttribute('stroke', sc.stroke);
+      circle.setAttribute('stroke-width', '1.5');
+      circle.style.transition = 'r 0.15s, stroke-width 0.15s';
+      g.appendChild(circle);
+
+      // 点击区域 (透明大圆提升点击精度)
+      var hit = document.createElementNS(ns, 'circle');
+      hit.setAttribute('cx', cx); hit.setAttribute('cy', cy);
+      hit.setAttribute('r', '12'); hit.setAttribute('fill', 'transparent');
+      g.appendChild(hit);
+
+      // ---- 事件 ----
+      g.addEventListener('mouseenter', function(e) {
+        circle.setAttribute('r', '7');
+        circle.setAttribute('stroke-width', '2.5');
+        halo.setAttribute('opacity', '0.2');
+        tooltip.innerHTML = '<div style="font-weight:600;margin-bottom:2px;">' + d.name + '</div>'
+          + '<div style="font-size:0.76rem;opacity:0.8;">' + d.org + '</div>'
+          + '<div style="font-size:0.76rem;margin-top:2px;">' + (STATUS_LABELS[d.status]||'') + '</div>';
+        tooltip.style.display = 'block';
+        positionTooltip(e);
+      });
+
+      g.addEventListener('mousemove', function(e) {
+        positionTooltip(e);
+      });
+
+      g.addEventListener('mouseleave', function() {
+        circle.setAttribute('r', '4.5');
+        circle.setAttribute('stroke-width', '1.5');
+        halo.setAttribute('opacity', '0');
+        tooltip.style.display = 'none';
+      });
+
+      g.addEventListener('click', function() {
+        window.location.href = d.href;
+      });
+
+      svg.appendChild(g);
+    });
+
+    function positionTooltip(e) {
+      var rect = container.getBoundingClientRect();
+      var x = e.clientX - rect.left + 14;
+      var y = e.clientY - rect.top - 10;
+      // Keep tooltip in bounds
+      var tw = tooltip.offsetWidth || 200;
+      var th = tooltip.offsetHeight || 60;
+      if (x + tw > rect.width - 10) x = e.clientX - rect.left - tw - 14;
+      if (y + th > rect.height - 10) y = rect.height - th - 10;
+      if (y < 10) y = 10;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top = y + 'px';
+    }
+  }
+
+  // ---- 入口 ----
+  window.addEventListener('DOMContentLoaded', renderMap);
+  window.addEventListener('resize', renderMap);
+  </script>
 </body>
 </html>
