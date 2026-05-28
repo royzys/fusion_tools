@@ -44,10 +44,10 @@
         <div id="map-tooltip" style="display:none;position:absolute;padding:8px 12px;background:#2d2a24;color:#fff;border-radius:6px;font-size:0.82rem;line-height:1.5;pointer-events:none;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.2);max-width:220px;"></div>
       </div>
       <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:10px;font-size:0.78rem;color:var(--text-secondary);">
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4a8c6e;margin-right:5px;"></span>运行中</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#b8913d;margin-right:5px;"></span>建设中/计划</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#8a857e;margin-right:5px;"></span>已退役</span>
-        <span style="margin-left:8px;">● 旗舰级  ● 中型  ● 小型</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3d8c5e;margin-right:5px;"></span>运行中</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d49a3d;margin-right:5px;"></span>建设中/计划</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#c0392b;margin-right:5px;"></span>已退役</span>
+        <span style="margin-left:8px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#999;margin-right:3px;"></span>旗舰  <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#999;margin-right:3px;"></span>主力  <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#999;margin-right:3px;"></span>小型</span>
       </div>
     </div>
 
@@ -308,52 +308,64 @@
    * ================================================================ */
 
   /* ---- 装置数据 (名称, 经度, 纬度, 链接, 状态标记) ---- */
-  /* ---- 装置标记大小: large(旗舰级) > medium > small ----
-   *  按装置规模/学术贡献/知名度分级
-   *  同址装置带偏移 (lon_off, lat_off)
-   */
+  /* ---- 装置数据 (按规模分级, 同址错开, 含新增装置) ---- */
   var DEVICES = [
-    {name:'ITER',        lon:5.76,  lat:43.69, href:'../research/device-iter.md',    org:'Cadarache',    status:'building', size:'large'},
-    {name:'JET',         lon:-1.23, lat:51.66, href:'../research/device-jet.md',     org:'Culham',       status:'retired',  size:'large'},
-    {name:'W7‑X',        lon:13.39, lat:54.09, href:'../research/device-w7x.md',     org:'IPP Greifswald', status:'active', size:'large'},
-    {name:'LHD',         lon:137.18,lat:35.35, href:'../research/device-lhd.md',     org:'NIFS, Toki',   status:'active', size:'large'},
-    {name:'JT‑60SA',     lon:140.48,lat:36.46, href:'../research/device-jt60sa.md',  org:'Naka',         status:'active', size:'large'},
-    {name:'EAST',        lon:117.28,lat:31.85, href:'../research/device-east.md',    org:'ASIPP, Hefei', status:'active', size:'large'},
-    {name:'SPARC',       lon:-71.61,lat:42.53, href:'../research/device-sparc.md',   org:'CFS, Devens',  status:'building',size:'large'},
-    {name:'DIII‑D',      lon:-117.23,lat:32.88,href:'../research/device-diiid.md',   org:'GA, San Diego',status:'active', size:'large'},
+    // ===== large: 旗舰级 =====
+    {name:'ITER',        lon:5.76,  lat:43.69, href:'../research/device-iter.md',  org:'Cadarache',       status:'building', size:'large'},
+    {name:'JET',         lon:-1.23, lat:51.66, href:'../research/device-jet.md',   org:'Culham, UK',      status:'retired',  size:'large'},
+    {name:'W7‑X',        lon:13.39, lat:54.09, href:'../research/device-w7x.md',   org:'IPP Greifswald',  status:'active',   size:'large'},
+    {name:'LHD',         lon:137.18,lat:35.35, href:'../research/device-lhd.md',   org:'NIFS, Toki',      status:'active',   size:'large'},
+    {name:'JT‑60SA',     lon:140.48,lat:36.46, href:'../research/device-jt60sa.md',org:'Naka, Japan',     status:'active',   size:'large'},
+    {name:'EAST',        lon:117.28,lat:31.85, href:'../research/device-east.md',  org:'ASIPP, Hefei',    status:'active',   size:'large'},
+    {name:'SPARC',       lon:-71.61,lat:42.53, href:'../research/device-sparc.md', org:'CFS, Devens',     status:'building', size:'large'},
+    {name:'DIII‑D',      lon:-117.23,lat:32.88,href:'../research/device-diiid.md', org:'GA, San Diego',   status:'active',   size:'large'},
+    {name:'KSTAR',       lon:127.38,lat:36.36, href:'../research/device-kstar.md', org:'KFE, Daejeon',    status:'active',   size:'large'},
 
-    {name:'ASDEX Upgrade',lon:11.67,lat:48.26, href:'../research/device-asdex-u.md', org:'IPP Garching', status:'active', size:'medium'},
-    {name:'KSTAR',       lon:127.38,lat:36.36, href:'../research/device-kstar.md',   org:'KFE, Daejeon', status:'active', size:'medium'},
-    {name:'Alcator C‑Mod',lon:-71.09,lat:42.36,href:'../research/device-alcator-cmod.md', org:'MIT PSFC', status:'retired',size:'medium'},
-    {name:'NSTX‑U',      lon:-74.68,lat:40.33, href:'../research/device-nstxu.md',   org:'PPPL, Princeton', status:'active', size:'medium'},
-    {name:'MAST Upgrade', lon:-1.26,lat:51.65, href:'../research/device-mast-u.md',  org:'Culham',       status:'active', size:'medium'},
-    {name:'HL‑2M/HL‑3',  lon:103.99,lat:30.57, href:'../research/device-hl2m.md',    org:'SWIP, Chengdu',status:'active', size:'medium'},
-    {name:'TCV',         lon:6.57, lat:46.52, href:'../research/device-tcv.md',      org:'EPFL, Lausanne',status:'active',size:'medium'},
-    {name:'WEST',        lon:5.74, lat:43.68, href:'../research/device-west.md',     org:'CEA Cadarache',status:'active', size:'medium'},
-    {name:'RFX‑mod',     lon:11.90,lat:45.41, href:'../research/device-rfx-mod.md',  org:'Padova',       status:'active', size:'medium'},
-    {name:'COMPASS‑U',   lon:14.47,lat:50.08, href:'../research/device-compass-u.md', org:'IPP CAS',     status:'building',size:'medium'},
+    // ===== medium: 主力装置 =====
+    {name:'ASDEX Upgrade',lon:11.67,lat:48.26, href:'../research/device-asdex-u.md',org:'IPP Garching',   status:'active',  size:'medium'},
+    {name:'Alcator C‑Mod',lon:-71.09,lat:42.36,href:'../research/device-alcator-cmod.md',org:'MIT PSFC', status:'retired',size:'medium'},
+    {name:'NSTX‑U',      lon:-74.68,lat:40.33, href:'../research/device-nstxu.md', org:'PPPL, Princeton',status:'active',  size:'medium'},
+    {name:'MAST Upgrade', lon:-1.26,lat:51.65, href:'../research/device-mast-u.md',org:'Culham, UK',      status:'active',  size:'medium'},
+    {name:'HL‑2M/HL‑3',  lon:103.99,lat:30.57, href:'../research/device-hl2m.md',  org:'SWIP, Chengdu',  status:'active',  size:'medium'},
+    {name:'TCV',         lon:6.57, lat:46.52, href:'../research/device-tcv.md',    org:'EPFL, Lausanne', status:'active',  size:'medium'},
+    {name:'WEST',        lon:5.74, lat:43.68, href:'../research/device-west.md',   org:'CEA Cadarache',  status:'active',  size:'medium'},
+    {name:'RFX‑mod',     lon:11.90,lat:45.41, href:'../research/device-rfx-mod.md',org:'CNR, Padova',    status:'active',  size:'medium'},
+    {name:'COMPASS‑U',   lon:14.47,lat:50.08, href:'../research/device-compass-u.md',org:'IPP CAS, Praha',status:'building',size:'medium'},
+    {name:'T‑15MD',      lon:37.60,lat:55.73, href:'../research/device-t15md.md',  org:'Kurchatov',      status:'active',  size:'medium'},
+    {name:'SST‑1',       lon:72.62,lat:23.19, href:'../research/device-sst1.md',   org:'IPR, Gandhinagar',status:'active',size:'medium'},
+    {name:'Globus‑M2',   lon:30.32,lat:59.97, href:'../research/device-globus-m2.md',org:'Ioffe, SPb',   status:'active',  size:'medium'},
+    {name:'CFETR',       lon:117.26,lat:31.83, href:'../research/device-cfetr.md', org:'ASIPP / CNDA',   status:'building',size:'medium'},
 
-    {name:'JT‑60U',      lon:140.46,lat:36.47, href:'../research/device-jt60.md',    org:'JAEA, Naka',   status:'retired', size:'small'},
-    {name:'TFTR',        lon:-74.70,lat:40.37, href:'../research/device-tftr.md',    org:'PPPL, Princeton', status:'retired',size:'small'},
-    {name:'TJ‑II',       lon:-3.69, lat:40.46, href:'../research/device-tj2.md',     org:'CIEMAT, Madrid',status:'active', size:'small'},
-    {name:'FTU',         lon:12.68, lat:41.81, href:'../research/device-ftu.md',     org:'ENEA, Frascati',status:'retired',size:'small'},
-    {name:'HSX',         lon:-89.41,lat:43.07, href:'../research/device-hsx.md',     org:'UW‑Madison',   status:'active', size:'small'},
-    {name:'J‑TEXT',      lon:114.32,lat:30.52, href:'../research/device-jtext.md',   org:'HUST, Wuhan',  status:'active', size:'small'},
-    {name:'ST40',        lon:-1.26, lat:51.75, href:'../research/device-st40.md',    org:'Tokamak Energy',status:'active',size:'small'},
-    {name:'T‑10',        lon:37.62, lat:55.75, href:'../research/device-t10.md',     org:'Kurchatov',    status:'retired', size:'small'},
-    {name:'TEXTOR',      lon:6.36,  lat:50.92, href:'../research/device-textor.md',  org:'FZ Jülich',    status:'retired', size:'small'},
-    {name:'PLT',         lon:-74.65,lat:40.35, href:'../research/device-plt.md',     org:'PPPL, Princeton',status:'retired',size:'small'},
-    {name:'START',       lon:-1.28, lat:51.64, href:'../research/device-start.md',   org:'Culham',       status:'retired', size:'small'}
+    // ===== small: 历史/小型/专项 =====
+    {name:'JT‑60U',      lon:140.46,lat:36.47, href:'../research/device-jt60.md',  org:'JAEA, Naka',     status:'retired', size:'small'},
+    {name:'TFTR',        lon:-74.70,lat:40.37, href:'../research/device-tftr.md',  org:'PPPL, Princeton',status:'retired', size:'small'},
+    {name:'TJ‑II',       lon:-3.69, lat:40.46, href:'../research/device-tj2.md',   org:'CIEMAT, Madrid', status:'active',  size:'small'},
+    {name:'FTU',         lon:12.68, lat:41.81, href:'../research/device-ftu.md',   org:'ENEA, Frascati', status:'retired', size:'small'},
+    {name:'HSX',         lon:-89.41,lat:43.07, href:'../research/device-hsx.md',   org:'UW‑Madison',     status:'active',  size:'small'},
+    {name:'J‑TEXT',      lon:114.32,lat:30.52, href:'../research/device-jtext.md', org:'HUST, Wuhan',    status:'active',  size:'small'},
+    {name:'ST40',        lon:-1.26, lat:51.75, href:'../research/device-st40.md',  org:'Tokamak Energy', status:'active',  size:'small'},
+    {name:'T‑10',        lon:37.62, lat:55.75, href:'../research/device-t10.md',   org:'Kurchatov',      status:'retired', size:'small'},
+    {name:'TEXTOR',      lon:6.36,  lat:50.92, href:'../research/device-textor.md',org:'FZ Jülich',      status:'retired', size:'small'},
+    {name:'PLT',         lon:-74.65,lat:40.35, href:'../research/device-plt.md',   org:'PPPL, Princeton',status:'retired', size:'small'},
+    {name:'START',       lon:-1.28, lat:51.64, href:'../research/device-start.md', org:'Culham, UK',     status:'retired', size:'small'},
+    {name:'ADITYA‑U',    lon:72.63, lat:23.20, href:'../research/device-aditya.md',org:'IPR, Gandhinagar',status:'active',size:'small'},
+    {name:'SUNIST',      lon:116.33,lat:40.00, href:'../research/device-sunist.md',org:'Tsinghua, Beijing',status:'active',size:'small'},
+    {name:'KTX',         lon:117.27,lat:31.84, href:'../research/device-ktx.md',   org:'USTC, Hefei',    status:'active',  size:'small'},
+    {name:'H‑1NF',       lon:149.10,lat:-35.27,href:'../research/device-h1nf.md',  org:'ANU, Canberra',  status:'active',  size:'small'},
+    {name:'TAE C‑2W',    lon:-117.66,lat:33.68,href:'../research/device-tae.md',   org:'TAE, Foothill Ranch',status:'active',size:'small'},
+    {name:'Helion',      lon:-122.20,lat:47.98,href:'../research/device-helion.md', org:'Helion, Everett',status:'building',size:'small'},
+    {name:'General Fusion',lon:-123.12,lat:49.28,href:'../research/device-gf.md',  org:'GF, Vancouver',  status:'building',size:'small'},
+    {name:'GOLEM',       lon:14.42, lat:50.10, href:'../research/device-golem.md', org:'ČVUT, Prague',   status:'active',  size:'small'}
   ];
 
-  /* ---- 标记大小映射 ---- */
-  var SIZE_R = { large: 4, medium: 3, small: 2 };
+  /* ---- 标记大小: 缩小尺寸减少重叠 ---- */
+  var SIZE_R = { large: 3, medium: 2.2, small: 1.5 };
 
   /* ---- 状态颜色 ---- */
   var STATUS_COLORS = {
-    active:   { fill:'#4a8c6e', stroke:'#3a7a5e' },
-    building: { fill:'#b8913d', stroke:'#9a7a2d' },
-    retired:  { fill:'#8a857e', stroke:'#7a756e' }
+    active:   '#3d8c5e',
+    building: '#d49a3d',
+    retired:  '#c0392b'
   };
   var STATUS_LABELS = {
     active:   '⚡ 运行中',
@@ -400,29 +412,28 @@
         g.style.cursor = 'pointer';
         var cx = d.lon, cy = -d.lat;
         var color = sc[d.status] || sc.active;
-        var rBase = SIZE_R[d.size] || SIZE_R.small;
+        var rB = SIZE_R[d.size] || SIZE_R.small;
 
-        // Hover 光晕
+        // Hover 光晕 (半透明显示)
         var halo = g.appendChild(document.createElementNS(ns, 'circle'));
         halo.setAttribute('cx',cx); halo.setAttribute('cy',cy);
-        halo.setAttribute('r', rBase * 3); halo.setAttribute('fill',color.fill);
+        halo.setAttribute('r', rB * 3); halo.setAttribute('fill',color);
         halo.setAttribute('opacity','0'); halo.style.transition='opacity 0.2s';
 
-        // 主标记圆
+        // 主标记圆 (无边框)
         var c = g.appendChild(document.createElementNS(ns, 'circle'));
         c.setAttribute('cx',cx); c.setAttribute('cy',cy);
-        c.setAttribute('r', rBase); c.setAttribute('fill',color.fill);
-        c.setAttribute('stroke',color.stroke); c.setAttribute('stroke-width', rBase * 0.4);
+        c.setAttribute('r', rB); c.setAttribute('fill',color);
         c.style.transition='r 0.15s';
 
-        // 点击区域 (透明, 略大于显示圆)
+        // 点击区域
         var hit = g.appendChild(document.createElementNS(ns, 'circle'));
         hit.setAttribute('cx',cx); hit.setAttribute('cy',cy);
-        hit.setAttribute('r', rBase * 4); hit.setAttribute('fill','transparent');
+        hit.setAttribute('r', rB * 4); hit.setAttribute('fill','transparent');
 
         g.addEventListener('mouseenter', function() {
-          c.setAttribute('r', rBase * 1.6); c.setAttribute('stroke-width', rBase * 0.6);
-          halo.setAttribute('opacity','0.2');
+          c.setAttribute('r', rB * 1.5);
+          halo.setAttribute('opacity','0.25');
           tooltip.innerHTML = '<div style="font-weight:600;margin-bottom:2px;">'+d.name+'</div>'
             +'<div style="font-size:0.76rem;opacity:0.8;">'+d.org+'</div>'
             +'<div style="font-size:0.76rem;margin-top:2px;">'+(STATUS_LABELS[d.status]||'')+'</div>';
@@ -439,7 +450,7 @@
           tooltip.style.left = x+'px'; tooltip.style.top = y+'px';
         });
         g.addEventListener('mouseleave', function() {
-          c.setAttribute('r', rBase); c.setAttribute('stroke-width', rBase * 0.4);
+          c.setAttribute('r', rB);
           halo.setAttribute('opacity','0');
           tooltip.style.display='none';
         });
