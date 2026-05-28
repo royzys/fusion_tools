@@ -779,44 +779,44 @@
         <div class="tool-list">
           <div class="sidebar-category">聚变工程 &amp; 物理</div>
 
-          <label class="tool-toggle" data-tool="lp">
+          <label class="tool-toggle" data-tool="lp" data-category="fusion">
             <input type="checkbox"> 等离子体自感
             <span class="tnum">L<sub>p</sub></span>
           </label>
 
-          <label class="tool-toggle" data-tool="fr">
+          <label class="tool-toggle" data-tool="fr" data-category="fusion">
             <input type="checkbox"> 特征频率
             <span class="tnum">f</span>
           </label>
 
-          <label class="tool-toggle" data-tool="sp">
+          <label class="tool-toggle" data-tool="sp" data-category="fusion">
             <input type="checkbox"> Spitzer 电阻率
             <span class="tnum">η</span>
           </label>
 
-          <label class="tool-toggle" data-tool="bt">
+          <label class="tool-toggle" data-tool="bt" data-category="fusion">
             <input type="checkbox"> 等离子体 β
             <span class="tnum">β</span>
           </label>
 
-          <label class="tool-toggle" data-tool="q">
+          <label class="tool-toggle" data-tool="q" data-category="fusion">
             <input type="checkbox"> 安全因子 q
             <span class="tnum">q</span>
           </label>
 
-          <label class="tool-toggle" data-tool="lr">
+          <label class="tool-toggle" data-tool="lr" data-category="fusion">
             <input type="checkbox"> 拉莫尔半径
             <span class="tnum">ρ<sub>L</sub></span>
           </label>
 
-          <label class="tool-toggle" data-tool="fx">
+          <label class="tool-toggle" data-tool="fx" data-category="fusion">
             <input type="checkbox"> 聚变性能
             <span class="tnum">P<sub>fus</sub> Q</span>
           </label>
 
           <div class="sidebar-category" style="margin-top:6px;">线圈电感计算</div>
 
-          <label class="tool-toggle" data-tool="ci">
+          <label class="tool-toggle" data-tool="ci" data-category="coil">
             <input type="checkbox"> 矩形截面线圈电感
             <span class="tnum">L M</span>
           </label>
@@ -1529,15 +1529,29 @@
     var saved;
     try { saved = JSON.parse(localStorage.getItem(LS_KEY)); } catch(e) {}
 
+    var hasFusion = false;
+    var hasCoil = false;
+
     document.querySelectorAll('.tool-toggle').forEach(function(t) {
       var cb = t.querySelector('input[type="checkbox"]');
       var tool = t.getAttribute('data-tool');
+      var cat = t.getAttribute('data-category');
       if (saved && Array.isArray(saved)) {
         cb.checked = saved.indexOf(tool) !== -1;
       } else {
         cb.checked = DEFAULT_CHECKED.indexOf(tool) !== -1;
       }
+      if (cb.checked && cat === 'fusion') hasFusion = true;
+      if (cb.checked && cat === 'coil') hasCoil = true;
     });
+
+    // If both categories would show, prefer fusion (uncheck coil)
+    if (hasFusion && hasCoil) {
+      document.querySelectorAll('.tool-toggle[data-category="coil"]').forEach(function(t) {
+        var cb = t.querySelector('input[type="checkbox"]');
+        cb.checked = false;
+      });
+    }
   }
 
   function saveToolState() {
@@ -1558,14 +1572,41 @@
     toggles.forEach(function(t) {
       var cb = t.querySelector('input[type="checkbox"]');
       var tool = t.getAttribute('data-tool');
+      var cat = t.getAttribute('data-category');
       var panel = document.getElementById('panel-' + tool);
 
       function update() {
         var checked = cb.checked;
+
+        // Category mutual exclusion: when checking a tool, uncheck the opposite category
+        if (checked && cat) {
+          var otherCat = (cat === 'fusion') ? 'coil' : 'fusion';
+          document.querySelectorAll('.tool-toggle[data-category="' + otherCat + '"]').forEach(function(ot) {
+            var ocb = ot.querySelector('input[type="checkbox"]');
+            if (ocb.checked) {
+              ocb.checked = false;
+              var op = document.getElementById('panel-' + ot.getAttribute('data-tool'));
+              if (op) op.classList.toggle('hidden', true);
+              ot.classList.toggle('active', false);
+            }
+          });
+        }
+
         if (panel) {
           panel.classList.toggle('hidden', !checked);
         }
         t.classList.toggle('active', checked);
+
+        // Show/hide the shared param section (only relevant for fusion tools)
+        var paramSection = document.querySelector('.param-section');
+        if (paramSection) {
+          var anyFusionChecked = false;
+          document.querySelectorAll('.tool-toggle[data-category="fusion"]').forEach(function(ft) {
+            if (ft.querySelector('input[type="checkbox"]').checked) anyFusionChecked = true;
+          });
+          paramSection.style.display = anyFusionChecked ? 'block' : 'none';
+        }
+
         updatePlaceholder();
         saveToolState();
       }
