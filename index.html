@@ -495,7 +495,7 @@
   ];
 
   /* ---- 标记大小: 缩小尺寸减少重叠 ---- */
-  var SIZE_R = { large: 3, medium: 2.2, small: 1.5 };
+  var SIZE_R = { large: 2.5, medium: 2, small: 1.5 };
 
   /* ---- 状态颜色 ---- */
   var STATUS_COLORS = {
@@ -543,7 +543,12 @@
 
     function placeMarkers() {
       var sc = STATUS_COLORS;
-      DEVICES.forEach(function(d) {
+      // 小号标记排在最后(渲染在最上层,不会遮挡其他标记)
+      var sorted = [].concat(DEVICES).sort(function(a,b) {
+        var order = { large:0, medium:1, small:2 };
+        return (order[a.size]||0) - (order[b.size]||0);
+      });
+      sorted.forEach(function(d) {
         var g = document.createElementNS(ns, 'g');
         g.style.cursor = 'pointer';
         var cx = d.lon, cy = -d.lat;
@@ -556,10 +561,11 @@
         halo.setAttribute('r', rB * 3); halo.setAttribute('fill',color);
         halo.setAttribute('opacity','0'); halo.style.transition='opacity 0.2s';
 
-        // 主标记圆 (白色描边增强对比度)
+        // 主标记圆 (白边增加可见性)
         var c = g.appendChild(document.createElementNS(ns, 'circle'));
         c.setAttribute('cx',cx); c.setAttribute('cy',cy);
         c.setAttribute('r', rB); c.setAttribute('fill',color);
+        c.setAttribute('stroke','rgba(255,255,255,0.6)'); c.setAttribute('stroke-width','0.4');
         c.style.transition='r 0.15s';
 
         // 点击区域
