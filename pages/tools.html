@@ -412,13 +412,13 @@
       <aside class="tools-sidebar">
         <h3>计算工具</h3>
         <div class="tool-list">
-          <label class="tool-toggle active" data-tool="lp">
-            <input type="checkbox" checked> 等离子体自感
+          <label class="tool-toggle" data-tool="lp">
+            <input type="checkbox"> 等离子体自感
             <span class="tnum">L<sub>p</sub></span>
           </label>
 
-          <label class="tool-toggle active" data-tool="fr">
-            <input type="checkbox" checked> 特征频率
+          <label class="tool-toggle" data-tool="fr">
+            <input type="checkbox"> 特征频率
             <span class="tnum">f</span>
           </label>
 
@@ -922,7 +922,41 @@
   /* ==================================================================
    *  Sidebar toggle → show/hide panels
    * ================================================================ */
+  /* ---- localStorage key ---- */
+  var LS_KEY = 'fusion-tools-checked';
+
+  /* ---- Default checked tools (first visit, no saved state) ---- */
+  var DEFAULT_CHECKED = ['lp', 'fr'];
+
+  function restoreToolState() {
+    var saved;
+    try { saved = JSON.parse(localStorage.getItem(LS_KEY)); } catch(e) {}
+
+    document.querySelectorAll('.tool-toggle').forEach(function(t) {
+      var cb = t.querySelector('input[type="checkbox"]');
+      var tool = t.getAttribute('data-tool');
+      if (saved && Array.isArray(saved)) {
+        cb.checked = saved.indexOf(tool) !== -1;
+      } else {
+        cb.checked = DEFAULT_CHECKED.indexOf(tool) !== -1;
+      }
+    });
+  }
+
+  function saveToolState() {
+    var checked = [];
+    document.querySelectorAll('.tool-toggle').forEach(function(t) {
+      var cb = t.querySelector('input[type="checkbox"]');
+      if (cb.checked) {
+        checked.push(t.getAttribute('data-tool'));
+      }
+    });
+    try { localStorage.setItem(LS_KEY, JSON.stringify(checked)); } catch(e) {}
+  }
+
   function bindToggles() {
+    restoreToolState();
+
     var toggles = document.querySelectorAll('.tool-toggle');
     toggles.forEach(function(t) {
       var cb = t.querySelector('input[type="checkbox"]');
@@ -936,6 +970,7 @@
         }
         t.classList.toggle('active', checked);
         updatePlaceholder();
+        saveToolState();
       }
 
       cb.addEventListener('change', update);
