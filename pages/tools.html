@@ -9,7 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
   <style>
-    /* ====== Tools Page Specific Styles ====== */
+    /* ============================================
+       Tools Page — Sidebar + Shared Parameters
+       ============================================ */
     :root {
       --tool-bg: #ffffff;
       --tool-border: #e5dfd6;
@@ -23,58 +25,233 @@
       --output-highlight: #4a7a6e;
       --output-warn: #b8913d;
       --formula-bg: #f5f3ed;
-      --species-h-bg: #d4e8da;
-      --species-d-bg: #d4e8da;
-      --species-t-bg: #e8dad4;
-      --species-he-bg: #dae0e8;
+      --sidebar-width: 220px;
     }
 
     .tools-page h2 {
       font-size: 1.5rem;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .tools-page > p {
       color: var(--text-secondary);
       font-size: 0.92rem;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
     }
 
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+    /* ---- Layout: sidebar + main ---- */
+    .tools-layout {
+      display: flex;
       gap: 28px;
+      align-items: flex-start;
     }
 
-    .tool-card {
+    /* ---- Sidebar ---- */
+    .tools-sidebar {
+      flex: 0 0 var(--sidebar-width);
+      position: sticky;
+      top: 80px;
       background: var(--tool-bg);
       border: 1px solid var(--tool-border);
       border-radius: var(--radius);
+      padding: 18px 16px;
       box-shadow: var(--shadow-sm);
-      transition: box-shadow 0.25s;
+    }
+
+    .tools-sidebar h3 {
+      font-family: "Noto Serif SC", Georgia, "Times New Roman", serif;
+      font-size: 0.95rem;
+      color: var(--heading);
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--tool-border);
+    }
+
+    .tool-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      margin-bottom: 2px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      transition: background 0.15s, color 0.15s;
+      user-select: none;
+    }
+
+    .tool-toggle:hover {
+      background: var(--tool-accent-subtle);
+      color: var(--text);
+    }
+
+    .tool-toggle input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid var(--tool-border);
+      border-radius: 3px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .tool-toggle input[type="checkbox"]:checked {
+      background: var(--tool-accent);
+      border-color: var(--tool-accent);
+    }
+
+    .tool-toggle input[type="checkbox"]:checked::after {
+      content: "✓";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .tool-toggle .tnum {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      margin-left: auto;
+    }
+
+    .tool-toggle.active {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ---- Main area ---- */
+    .tools-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* ---- Shared Parameters section ---- */
+    .param-section {
+      background: var(--tool-bg);
+      border: 1px solid var(--tool-border);
+      border-radius: var(--radius);
+      padding: 20px 24px 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .param-section h3 {
+      font-family: "Noto Serif SC", Georgia, "Times New Roman", serif;
+      font-size: 1rem;
+      color: var(--heading);
+      margin-bottom: 6px;
+    }
+
+    .param-section .param-hint {
+      font-size: 0.78rem;
+      color: var(--text-tertiary);
+      margin-bottom: 14px;
+    }
+
+    .param-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px 18px;
+    }
+
+    .param-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .param-group label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .param-group .input-unit {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .param-group input,
+    .param-group select {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid var(--input-border);
+      border-radius: 5px;
+      background: var(--input-bg);
+      font-family: "Noto Sans Mono", "Consolas", monospace;
+      font-size: 0.84rem;
+      color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      min-width: 0;
+    }
+
+    .param-group input:focus,
+    .param-group select:focus {
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 2px rgba(122, 92, 61, 0.15);
+    }
+
+    .param-group .unit-label {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      white-space: nowrap;
+    }
+
+    .param-group select {
+      font-family: "Noto Sans SC", sans-serif;
+      cursor: pointer;
+    }
+
+    /* ---- Results section ---- */
+    .results-section h3 {
+      font-family: "Noto Serif SC", Georgia, "Times New Roman", serif;
+      font-size: 1rem;
+      color: var(--heading);
+      margin-bottom: 14px;
+    }
+
+    .result-panel {
+      background: var(--tool-bg);
+      border: 1px solid var(--tool-border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
       overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: opacity 0.2s;
     }
 
-    .tool-card:hover {
-      box-shadow: var(--shadow-md);
+    .result-panel.hidden {
+      display: none;
     }
 
-    .tool-card-header {
-      padding: 18px 24px;
-      background: var(--accent-subtle);
+    .result-panel-header {
+      padding: 12px 20px;
+      background: var(--tool-accent-subtle);
       border-bottom: 1px solid var(--tool-border);
       display: flex;
-      align-items: baseline;
-      gap: 12px;
+      align-items: center;
+      gap: 10px;
     }
 
-    .tool-card-header h3 {
+    .result-panel-header h4 {
       font-family: "Noto Serif SC", Georgia, "Times New Roman", serif;
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       color: var(--heading);
+      flex: 1;
     }
 
-    .tool-card-header .tool-badge {
+    .result-panel-header .badge {
       font-size: 0.7rem;
       padding: 2px 10px;
       border-radius: 20px;
@@ -83,158 +260,41 @@
       font-weight: 500;
     }
 
-    .tool-card-body {
-      padding: 20px 24px 24px;
+    .result-panel-body {
+      padding: 16px 20px 20px;
     }
 
-    /* Formula display */
+    /* Formula box inside result */
     .formula-box {
       background: var(--formula-bg);
       border: 1px solid var(--tool-border);
       border-radius: 6px;
-      padding: 12px 16px;
-      margin-bottom: 18px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
       font-family: "Noto Sans Mono", "Consolas", "SF Mono", monospace;
-      font-size: 0.85rem;
-      line-height: 1.7;
+      font-size: 0.82rem;
+      line-height: 1.6;
       overflow-x: auto;
-    }
-
-    .formula-box .fmath {
-      font-family: "Noto Sans Mono", "Consolas", "SF Mono", monospace;
-      white-space: nowrap;
     }
 
     .formula-box .fnote {
       font-family: "Noto Sans SC", sans-serif;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: var(--text-tertiary);
       display: block;
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
-    /* Input area */
-    .input-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 20px;
-      margin-bottom: 16px;
-    }
-
-    .input-grid.three-col {
-      grid-template-columns: 1fr 1fr 1fr;
-    }
-
-    .input-grid.full-width {
-      grid-template-columns: 1fr;
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .input-group label {
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-    }
-
-    .input-group .input-unit {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .input-group input,
-    .input-group select {
-      flex: 1;
-      padding: 7px 10px;
-      border: 1px solid var(--input-border);
-      border-radius: 5px;
-      background: var(--input-bg);
-      font-family: "Noto Sans Mono", "Consolas", monospace;
-      font-size: 0.85rem;
-      color: var(--text);
-      transition: border-color 0.2s, box-shadow 0.2s;
-      outline: none;
-      min-width: 0;
-    }
-
-    .input-group input:focus,
-    .input-group select:focus {
-      border-color: var(--input-focus);
-      box-shadow: 0 0 0 2px rgba(122, 92, 61, 0.15);
-    }
-
-    .input-group .unit-label {
-      font-size: 0.78rem;
-      color: var(--text-tertiary);
-      white-space: nowrap;
-    }
-
-    .input-group select {
-      font-family: "Noto Sans SC", sans-serif;
-      cursor: pointer;
-    }
-
-    /* Buttons */
-    .btn-calc {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 22px;
-      background: var(--tool-accent);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-family: "Noto Sans SC", sans-serif;
-      font-size: 0.88rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .btn-calc:hover {
-      background: var(--tool-accent-light);
-    }
-
-    .btn-calc:active {
-      transform: scale(0.97);
-    }
-
-    .btn-calc.secondary {
-      background: var(--accent-subtle);
-      color: var(--text);
-    }
-
-    .btn-calc.secondary:hover {
-      background: var(--tool-border);
-    }
-
-    /* Output area */
+    /* Output rows */
     .output-area {
-      margin-top: 14px;
-      padding: 14px 18px;
-      background: var(--output-bg);
-      border: 1px solid var(--tool-border);
-      border-radius: 6px;
-      min-height: 60px;
-    }
-
-    .output-area .output-empty {
-      color: var(--text-tertiary);
-      font-size: 0.84rem;
-      text-align: center;
-      padding: 12px 0;
+      padding: 0;
     }
 
     .output-row {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      padding: 6px 0;
+      padding: 5px 0;
       border-bottom: 1px solid rgba(0,0,0,0.05);
     }
 
@@ -243,13 +303,13 @@
     }
 
     .output-row .olabel {
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       color: var(--text-secondary);
     }
 
     .output-row .ovalue {
       font-family: "Noto Sans Mono", "Consolas", monospace;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 600;
       color: var(--text);
       text-align: right;
@@ -257,7 +317,7 @@
 
     .output-row .ovalue.highlight {
       color: var(--output-highlight);
-      font-size: 0.95rem;
+      font-size: 0.92rem;
     }
 
     .output-row .ovalue.warn {
@@ -267,85 +327,63 @@
     .output-row .ounit {
       font-family: "Noto Sans SC", sans-serif;
       font-weight: 400;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: var(--text-tertiary);
-      margin-left: 6px;
+      margin-left: 5px;
     }
 
-    /* Comparison bar for beta_N */
-    .comp-bar-wrapper {
-      margin-top: 8px;
-      padding: 8px 0;
-    }
-
-    .comp-bar {
-      height: 10px;
-      background: var(--tool-border);
-      border-radius: 5px;
-      overflow: hidden;
-      position: relative;
-      margin-top: 4px;
-    }
-
-    .comp-bar .fill {
-      height: 100%;
-      background: var(--output-highlight);
-      border-radius: 5px;
-      transition: width 0.3s;
-    }
-
-    .comp-bar .troyon-marker {
-      position: absolute;
-      top: -4px;
-      width: 2px;
-      height: 18px;
-      background: #c0392b;
-      border-radius: 1px;
-    }
-
-    /* Species selector visual */
-    .ion-summary {
-      font-size: 0.82rem;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
-
-    /* Responsive */
-    @media (max-width: 500px) {
-      .tools-grid {
-        grid-template-columns: 1fr;
-      }
-      .input-grid {
-        grid-template-columns: 1fr;
-      }
-      .input-grid.three-col {
-        grid-template-columns: 1fr;
-      }
-      .tool-card-body {
-        padding: 16px;
-      }
-    }
-
-    /* Section dividers within tool */
-    .tool-section {
-      margin-top: 20px;
-      padding-top: 18px;
-      border-top: 1px dashed var(--tool-border);
-    }
-
-    .tool-section:first-child {
-      margin-top: 0;
-      padding-top: 0;
-      border-top: none;
-    }
-
-    .tool-section-title {
-      font-family: "Noto Sans SC", sans-serif;
-      font-size: 0.82rem;
-      font-weight: 600;
+    /* ---- No selection placeholder ---- */
+    .no-selection {
+      text-align: center;
+      padding: 40px 20px;
       color: var(--text-tertiary);
+      font-size: 0.9rem;
+      background: var(--tool-bg);
+      border: 1px dashed var(--tool-border);
+      border-radius: var(--radius);
+    }
+
+    .no-selection span {
+      font-size: 1.4rem;
+      display: block;
       margin-bottom: 8px;
-      letter-spacing: 0.03em;
+    }
+
+    /* ---- Footnotes ---- */
+    .tools-footnote {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .tools-footnote p {
+      font-size: 0.82rem;
+      color: var(--text-tertiary);
+      line-height: 1.8;
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 768px) {
+      .tools-layout {
+        flex-direction: column;
+      }
+      .tools-sidebar {
+        flex: none;
+        width: 100%;
+        position: static;
+      }
+      .tools-sidebar .tool-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .tools-sidebar .tool-toggle {
+        flex: 1 1 auto;
+        min-width: 130px;
+      }
+      .param-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
 </head>
@@ -366,96 +404,135 @@
   <main class="container tools-page">
 
     <h2>聚变等离子体计算工具</h2>
-    <p>常用等离子体物理量的快速计算器。所有计算在浏览器本地完成，数据不会上传。</p>
+    <p>左侧勾选需要使用的工具，在装置参数区填写数值后自动计算。全部在浏览器本地执行。</p>
 
-    <div class="tools-grid">
+    <div class="tools-layout">
 
-      <!-- ============================================================ -->
-      <!-- Tool 1: 等离子体自感 -->
-      <!-- ============================================================ -->
-      <div class="tool-card">
-        <div class="tool-card-header">
-          <h3>等离子体自感</h3>
-          <span class="tool-badge">Lp</span>
+      <!-- ====== Sidebar ====== -->
+      <aside class="tools-sidebar">
+        <h3>计算工具</h3>
+        <div class="tool-list">
+          <label class="tool-toggle active" data-tool="lp">
+            <input type="checkbox" checked> 等离子体自感
+            <span class="tnum">L<sub>p</sub></span>
+          </label>
+
+          <label class="tool-toggle active" data-tool="fr">
+            <input type="checkbox" checked> 特征频率
+            <span class="tnum">f</span>
+          </label>
+
+          <label class="tool-toggle" data-tool="sp">
+            <input type="checkbox"> Spitzer 电阻率
+            <span class="tnum">η</span>
+          </label>
+
+          <label class="tool-toggle" data-tool="bt">
+            <input type="checkbox"> 等离子体 β
+            <span class="tnum">β</span>
+          </label>
+
+          <label class="tool-toggle" data-tool="q">
+            <input type="checkbox"> 安全因子 q
+            <span class="tnum">q</span>
+          </label>
+
+          <label class="tool-toggle" data-tool="lr">
+            <input type="checkbox"> 拉莫尔半径
+            <span class="tnum">ρ<sub>L</sub></span>
+          </label>
         </div>
-        <div class="tool-card-body">
-          <div class="formula-box">
-            L<sub>p</sub> = μ<sub>0</sub>R [ ln(8R/a) − 2 + l<sub>i</sub>/2 ]
-            <span class="fnote">μ₀ = 4π × 10⁻⁷ H/m, lᵢ 为内感（无量纲）</span>
-          </div>
+      </aside>
 
-          <div class="input-grid">
-            <div class="input-group">
+      <!-- ====== Main content ====== -->
+      <div class="tools-main">
+
+        <!-- === Shared Parameters === -->
+        <section class="param-section">
+          <h3>装置参数</h3>
+          <p class="param-hint">修改任意参数后，所有已勾选的计算工具自动更新结果。</p>
+          <div class="param-grid">
+            <div class="param-group">
               <label>大半径 R</label>
               <div class="input-unit">
-                <input type="number" id="lp-R" step="any" value="1.85" placeholder="e.g. 1.85">
+                <input type="number" id="p-R" step="any" value="6.2">
                 <span class="unit-label">m</span>
               </div>
             </div>
-            <div class="input-group">
+            <div class="param-group">
               <label>小半径 a</label>
               <div class="input-unit">
-                <input type="number" id="lp-a" step="any" value="0.57" placeholder="e.g. 0.57">
+                <input type="number" id="p-a" step="any" value="2.0">
                 <span class="unit-label">m</span>
               </div>
             </div>
-            <div class="input-group">
-              <label>内感 l<sub>i</sub></label>
-              <div class="input-unit">
-                <input type="number" id="lp-li" step="any" value="0.5" placeholder="e.g. 0.5">
-                <span class="unit-label">—</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>等离子体电流 I<sub>p</sub>（选填）</label>
-              <div class="input-unit">
-                <input type="number" id="lp-Ip" step="any" value="8.7" placeholder="e.g. 8.7">
-                <span class="unit-label">MA</span>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn-calc" onclick="calcPlasmaInductance()">计算自感</button>
-
-          <div class="output-area" id="lp-output">
-            <div class="output-empty">↑ 点击「计算自感」查看结果</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ============================================================ -->
-      <!-- Tool 2: 特征频率 -->
-      <!-- ============================================================ -->
-      <div class="tool-card">
-        <div class="tool-card-header">
-          <h3>特征频率</h3>
-          <span class="tool-badge">f<sub>ce</sub> f<sub>ci</sub> f<sub>pe</sub> f<sub>LH</sub></span>
-        </div>
-        <div class="tool-card-body">
-          <div class="formula-box">
-            f<sub>ce</sub> = eB/2πm<sub>e</sub> &nbsp;&nbsp; f<sub>ci</sub> = eB/2πm<sub>i</sub> &nbsp;&nbsp; f<sub>pe</sub> = (1/2π)√(n<sub>e</sub>e²/ε₀m<sub>e</sub>)
-            <span class="fnote">ω<sub>LH</sub>² ≈ ω<sub>ci</sub>² + ω<sub>pi</sub>²/(1 + ω<sub>pe</sub>²/ω<sub>ce</sub>²)</span>
-          </div>
-
-          <div class="input-grid">
-            <div class="input-group">
+            <div class="param-group">
               <label>环向磁场 B<sub>t</sub></label>
               <div class="input-unit">
-                <input type="number" id="fr-B" step="any" value="5.0" placeholder="e.g. 5.0">
+                <input type="number" id="p-Bt" step="any" value="5.3">
                 <span class="unit-label">T</span>
               </div>
             </div>
-            <div class="input-group">
+            <div class="param-group">
+              <label>等离子体电流 I<sub>p</sub></label>
+              <div class="input-unit">
+                <input type="number" id="p-Ip" step="any" value="15">
+                <span class="unit-label">MA</span>
+              </div>
+            </div>
+            <div class="param-group">
               <label>电子密度 n<sub>e</sub></label>
               <div class="input-unit">
-                <input type="number" id="fr-ne" step="any" value="1.0" placeholder="e.g. 1.0">
+                <input type="number" id="p-ne" step="any" value="1.0">
                 <span class="unit-label">10²⁰ m⁻³</span>
               </div>
             </div>
-            <div class="input-group">
+            <div class="param-group">
+              <label>电子温度 T<sub>e</sub></label>
+              <div class="input-unit">
+                <input type="number" id="p-Te" step="any" value="10">
+                <span class="unit-label">keV</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label>离子温度 T<sub>i</sub></label>
+              <div class="input-unit">
+                <input type="number" id="p-Ti" step="any" value="10">
+                <span class="unit-label">keV</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label>拉长比 κ</label>
+              <div class="input-unit">
+                <input type="number" id="p-kappa" step="any" value="1.70">
+                <span class="unit-label">—</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label>三角形变 δ</label>
+              <div class="input-unit">
+                <input type="number" id="p-delta" step="any" value="0.33">
+                <span class="unit-label">—</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label>内感 l<sub>i</sub></label>
+              <div class="input-unit">
+                <input type="number" id="p-li" step="any" value="0.5">
+                <span class="unit-label">—</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label>有效电荷 Z<sub>eff</sub></label>
+              <div class="input-unit">
+                <input type="number" id="p-Zeff" step="any" value="2.0">
+                <span class="unit-label">—</span>
+              </div>
+            </div>
+            <div class="param-group">
               <label>离子种类</label>
               <div class="input-unit">
-                <select id="fr-ion">
+                <select id="p-ion">
                   <option value="H">氢 (H⁺)</option>
                   <option value="D" selected>氘 (D⁺)</option>
                   <option value="T">氚 (T⁺)</option>
@@ -465,269 +542,127 @@
               </div>
             </div>
           </div>
+        </section>
 
-          <button class="btn-calc" onclick="calcFrequencies()">计算频率</button>
+        <!-- === Results === -->
+        <section class="results-section">
+          <h3>计算结果</h3>
 
-          <div class="output-area" id="fr-output">
-            <div class="output-empty">↑ 点击「计算频率」查看结果</div>
+          <!-- Placeholder: no tool selected -->
+          <div class="no-selection" id="no-selection">
+            <span>☝️</span>
+            在左侧勾选计算工具，结果会显示在这里。
+            勾选多个工具可同时查看多项计算结果。
           </div>
+
+          <!-- Tool 1: Plasma Inductance -->
+          <div class="result-panel" id="panel-lp">
+            <div class="result-panel-header">
+              <h4>等离子体自感</h4>
+              <span class="badge">L<sub>p</sub></span>
+            </div>
+            <div class="result-panel-body">
+              <div class="formula-box">
+                L<sub>p</sub> = μ<sub>0</sub>R [ ln(8R/a) − 2 + l<sub>i</sub>/2 ]
+                <span class="fnote">μ₀ = 4π × 10⁻⁷ H/m</span>
+              </div>
+              <div class="output-area" id="out-lp"></div>
+            </div>
+          </div>
+
+          <!-- Tool 2: Frequencies -->
+          <div class="result-panel" id="panel-fr">
+            <div class="result-panel-header">
+              <h4>特征频率</h4>
+              <span class="badge">f<sub>ce</sub> f<sub>ci</sub> f<sub>pe</sub> f<sub>LH</sub></span>
+            </div>
+            <div class="result-panel-body">
+              <div class="formula-box">
+                f<sub>ce</sub> = eB/2πm<sub>e</sub> &emsp; f<sub>ci</sub> = eB/2πm<sub>i</sub>
+                 &emsp; f<sub>pe</sub> = (1/2π)√(n<sub>e</sub>e²/ε₀m<sub>e</sub>)
+                <span class="fnote">ω<sub>LH</sub>² ≈ ω<sub>ci</sub>² + ω<sub>pi</sub>²/(1 + ω<sub>pe</sub>²/ω<sub>ce</sub>²)</span>
+              </div>
+              <div class="output-area" id="out-fr"></div>
+            </div>
+          </div>
+
+          <!-- Tool 3: Spitzer -->
+          <div class="result-panel" id="panel-sp">
+            <div class="result-panel-header">
+              <h4>Spitzer 电阻率</h4>
+              <span class="badge">η</span>
+            </div>
+            <div class="result-panel-body">
+              <div class="formula-box">
+                η<sub>∥</sub> = 1.65 × 10⁻⁹ · Z<sub>eff</sub> · lnΛ / T<sub>e</sub>³/² &emsp; [Ω·m]
+                <span class="fnote">η<sub>⊥</sub> ≈ 2 η<sub>∥</sub> &emsp; lnΛ ≈ 24 − ln(√n̅ₑ / T<sub>e</sub>) &emsp; τ<sub>R</sub> ≈ μ₀a²/(2η<sub>∥</sub>)</span>
+              </div>
+              <div class="output-area" id="out-sp"></div>
+            </div>
+          </div>
+
+          <!-- Tool 4: Beta -->
+          <div class="result-panel" id="panel-bt">
+            <div class="result-panel-header">
+              <h4>等离子体 β</h4>
+              <span class="badge">β<sub>t</sub> β<sub>N</sub></span>
+            </div>
+            <div class="result-panel-body">
+              <div class="formula-box">
+                β<sub>t</sub> = 2μ₀⟨p⟩/B<sub>t</sub>² &emsp; β<sub>N</sub> = β<sub>t</sub>[%] · a · B<sub>t</sub> / I<sub>p</sub>
+                <span class="fnote">⟨p⟩ = n<sub>e</sub>(T<sub>e</sub> + T<sub>i</sub>) · e · 10³ &emsp; Troyon: β<sub>N</sub> ≲ 3.5 (%·m·T/MA)</span>
+              </div>
+              <div class="output-area" id="out-bt"></div>
+            </div>
+          </div>
+
+          <!-- Tool 5: q -->
+          <div class="result-panel" id="panel-q">
+            <div class="result-panel-header">
+              <h4>安全因子 q</h4>
+              <span class="badge">q<sub>cyl</sub> q<sub>95</sub></span>
+            </div>
+            <div class="result-panel-body">
+              <div class="formula-box">
+                q<sub>cyl</sub> = (5a²B<sub>t</sub>/RI<sub>p</sub>) · (1+κ²)/2
+                &emsp; q<sub>95</sub> ≈ q<sub>cyl</sub> · (1 + 1.22ε² + 1.78ε⁴)/(1 − ε²)²
+                <span class="fnote">ε = a/R</span>
+              </div>
+              <div class="output-area" id="out-q"></div>
+            </div>
+          </div>
+
+          <!-- Tool 6: Larmor -->
+          <div class="result-panel" id="panel-lr">
+            <div class="result-panel-header">
+              <h4>拉莫尔半径</h4>
+              <span class="badge">ρ<sub>L</sub></span>
+            </div>
+            <div class="result-panel-body">
+              <div class="formula-box">
+                ρ<sub>L</sub> = mv<sub>⊥</sub> / (|q|B)
+                <span class="fnote">ρ<sub>Le</sub> ≈ 2.38√T<sub>e</sub>/B [mm] &emsp; ρ<sub>Li</sub>(D) ≈ 144√T<sub>i</sub>/B [mm]</span>
+              </div>
+              <div class="output-area" id="out-lr"></div>
+            </div>
+          </div>
+
+        </section>
+
+        <div class="tools-footnote">
+          <p>
+            <strong>说明：</strong>
+            全部计算在浏览器本地执行，数据不上传。默认参数为 ITER 基准设计值。
+            lnΛ 自动估算，β<sub>N</sub> Troyon 极限参考值 ~3.5（常规托卡马克）、~4–5（球形托卡马克）、~2–3（仿星器）。
+          </p>
         </div>
-      </div>
 
-      <!-- ============================================================ -->
-      <!-- Tool 3: Spitzer 电阻率 -->
-      <!-- ============================================================ -->
-      <div class="tool-card">
-        <div class="tool-card-header">
-          <h3>Spitzer 电阻率</h3>
-          <span class="tool-badge">η</span>
-        </div>
-        <div class="tool-card-body">
-          <div class="formula-box">
-            η<sub>∥</sub> = 1.65 × 10⁻⁹ · Z<sub>eff</sub> · lnΛ / T<sub>e</sub>³/² &nbsp;&nbsp; [Ω·m]
-            <span class="fnote">η<sub>⊥</sub> ≈ 2 η<sub>∥</sub>（古典垂直方向）&nbsp; lnΛ = 24 − ln(√n̅ₑ / T<sub>e</sub>)</span>
-          </div>
-
-          <div class="input-grid">
-            <div class="input-group">
-              <label>电子温度 T<sub>e</sub></label>
-              <div class="input-unit">
-                <input type="number" id="sp-T" step="any" value="5.0" placeholder="e.g. 5.0">
-                <span class="unit-label">keV</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>电子密度 n<sub>e</sub></label>
-              <div class="input-unit">
-                <input type="number" id="sp-ne" step="any" value="1.0" placeholder="e.g. 1.0">
-                <span class="unit-label">10²⁰ m⁻³</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>有效电荷 Z<sub>eff</sub></label>
-              <div class="input-unit">
-                <input type="number" id="sp-Z" step="any" value="2.0" placeholder="e.g. 2.0">
-                <span class="unit-label">—</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>大半径 R（电阻时间用）</label>
-              <div class="input-unit">
-                <input type="number" id="sp-R" step="any" value="1.85" placeholder="e.g. 1.85">
-                <span class="unit-label">m</span>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn-calc" onclick="calcSpitzer()">计算电阻率</button>
-
-          <div class="output-area" id="sp-output">
-            <div class="output-empty">↑ 点击「计算电阻率」查看结果</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ============================================================ -->
-      <!-- Tool 4: 等离子体 β -->
-      <!-- ============================================================ -->
-      <div class="tool-card">
-        <div class="tool-card-header">
-          <h3>等离子体 β</h3>
-          <span class="tool-badge">β<sub>t</sub> β<sub>N</sub></span>
-        </div>
-        <div class="tool-card-body">
-          <div class="formula-box">
-            β<sub>t</sub> = 2μ₀⟨p⟩/B<sub>t</sub>² &nbsp;&nbsp; β<sub>N</sub> = β<sub>t</sub>[%] · a · B<sub>t</sub> / I<sub>p</sub>
-            <span class="fnote">⟨p⟩ = n<sub>e</sub>(T<sub>e</sub> + T<sub>i</sub>) · e · 10³ &nbsp;&nbsp; Troyon 极限: β<sub>N</sub> ≲ 3.5 (%·m·T/MA)</span>
-          </div>
-
-          <div class="input-grid">
-            <div class="input-group">
-              <label>电子密度 n<sub>e</sub></label>
-              <div class="input-unit">
-                <input type="number" id="bt-ne" step="any" value="1.0" placeholder="e.g. 1.0">
-                <span class="unit-label">10²⁰ m⁻³</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>电子温度 T<sub>e</sub></label>
-              <div class="input-unit">
-                <input type="number" id="bt-Te" step="any" value="10" placeholder="e.g. 10">
-                <span class="unit-label">keV</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>离子温度 T<sub>i</sub></label>
-              <div class="input-unit">
-                <input type="number" id="bt-Ti" step="any" value="10" placeholder="e.g. 10">
-                <span class="unit-label">keV</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>环向磁场 B<sub>t</sub></label>
-              <div class="input-unit">
-                <input type="number" id="bt-B" step="any" value="5.3" placeholder="e.g. 5.3">
-                <span class="unit-label">T</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>小半径 a</label>
-              <div class="input-unit">
-                <input type="number" id="bt-a" step="any" value="2.0" placeholder="e.g. 2.0">
-                <span class="unit-label">m</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>等离子体电流 I<sub>p</sub></label>
-              <div class="input-unit">
-                <input type="number" id="bt-Ip" step="any" value="15" placeholder="e.g. 15">
-                <span class="unit-label">MA</span>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn-calc" onclick="calcBeta()">计算 β</button>
-
-          <div class="output-area" id="bt-output">
-            <div class="output-empty">↑ 点击「计算 β」查看结果</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ============================================================ -->
-      <!-- Tool 5: 安全因子 q -->
-      <!-- ============================================================ -->
-      <div class="tool-card">
-        <div class="tool-card-header">
-          <h3>安全因子 q</h3>
-          <span class="tool-badge">q<sub>cyl</sub> q<sub>95</sub></span>
-        </div>
-        <div class="tool-card-body">
-          <div class="formula-box">
-            q<sub>cyl</sub> = (5a²B<sub>t</sub>/RI<sub>p</sub>) · (1+κ²)/2 &nbsp;&nbsp; q<sub>95</sub> ≈ q<sub>cyl</sub> · (1 + 1.22ε² + 1.78ε⁴)/(1 − ε²)²
-            <span class="fnote">ε = a/R &nbsp; κ 为拉长比 &nbsp; δ 为三角形变 &nbsp; I<sub>p</sub> 以 MA 计</span>
-          </div>
-
-          <div class="input-grid">
-            <div class="input-group">
-              <label>大半径 R</label>
-              <div class="input-unit">
-                <input type="number" id="q-R" step="any" value="6.2" placeholder="e.g. 6.2">
-                <span class="unit-label">m</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>小半径 a</label>
-              <div class="input-unit">
-                <input type="number" id="q-a" step="any" value="2.0" placeholder="e.g. 2.0">
-                <span class="unit-label">m</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>环向磁场 B<sub>t</sub></label>
-              <div class="input-unit">
-                <input type="number" id="q-B" step="any" value="5.3" placeholder="e.g. 5.3">
-                <span class="unit-label">T</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>等离子体电流 I<sub>p</sub></label>
-              <div class="input-unit">
-                <input type="number" id="q-Ip" step="any" value="15" placeholder="e.g. 15">
-                <span class="unit-label">MA</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>拉长比 κ</label>
-              <div class="input-unit">
-                <input type="number" id="q-kappa" step="any" value="1.70" placeholder="e.g. 1.70">
-                <span class="unit-label">—</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>三角形变 δ</label>
-              <div class="input-unit">
-                <input type="number" id="q-delta" step="any" value="0.33" placeholder="e.g. 0.33">
-                <span class="unit-label">—</span>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn-calc" onclick="calcSafetyFactor()">计算 q</button>
-
-          <div class="output-area" id="q-output">
-            <div class="output-empty">↑ 点击「计算 q」查看结果</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ============================================================ -->
-      <!-- Tool 6: 拉莫尔半径 -->
-      <!-- ============================================================ -->
-      <div class="tool-card">
-        <div class="tool-card-header">
-          <h3>拉莫尔半径</h3>
-          <span class="tool-badge">ρ<sub>L</sub></span>
-        </div>
-        <div class="tool-card-body">
-          <div class="formula-box">
-            ρ<sub>L</sub> = mv<sub>⊥</sub> / (|q|B)
-            <span class="fnote">ρ<sub>Le</sub> ≈ 2.38√(T<sub>e</sub> [keV]) / B [T] &nbsp;&nbsp; ρ<sub>Li</sub> (D) ≈ 144√(T<sub>i</sub> [keV]) / B [T] &nbsp; [mm]</span>
-          </div>
-
-          <div class="input-grid three-col">
-            <div class="input-group">
-              <label>磁场 B</label>
-              <div class="input-unit">
-                <input type="number" id="lr-B" step="any" value="5.3" placeholder="e.g. 5.3">
-                <span class="unit-label">T</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>温度 T</label>
-              <div class="input-unit">
-                <input type="number" id="lr-T" step="any" value="10" placeholder="e.g. 10">
-                <span class="unit-label">keV</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>粒子种类</label>
-              <div class="input-unit">
-                <select id="lr-species">
-                  <option value="e">电子</option>
-                  <option value="H">氢 (H⁺)</option>
-                  <option value="D" selected>氘 (D⁺)</option>
-                  <option value="T">氚 (T⁺)</option>
-                  <option value="He4">氦-4 (α)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn-calc" onclick="calcLarmor()">计算拉莫尔半径</button>
-
-          <div class="output-area" id="lr-output">
-            <div class="output-empty">↑ 点击「计算拉莫尔半径」查看结果</div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /.tools-grid -->
-
-    <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border);">
-      <p style="font-size: 0.82rem; color: var(--text-tertiary); line-height: 1.8;">
-        <strong>说明：</strong>
-        所有公式采用标准聚变物理常用形式。默认参数值取自 ITER 设计参数（用于演示）。
-        库仑对数 lnΛ 在 Spitzer 电阻率工具中自动估算。
-        β<sub>N</sub> 的 Troyon 极限参考值 ~3.5（常规托卡马克），~4–5（球形托卡马克），仿星器 ~2–3。
-        若要新增计算工具或有参数修正建议，欢迎提出。
-      </p>
-    </div>
-
+      </div><!-- /.tools-main -->
+    </div><!-- /.tools-layout -->
   </main>
 
   <footer>
-    <p>计算工具 · 聚变装置目录 · 全部计算在浏览器本地执行</p>
+    <p>聚变计算工具 · 聚变装置目录</p>
   </footer>
 
   <script>
@@ -736,21 +671,21 @@
   /* ==================================================================
    *  Constants
    * ================================================================ */
-  const MU0 = 4 * Math.PI * 1e-7;            // H/m
-  const E_CHARGE = 1.602176634e-19;           // C
-  const M_E = 9.10938356e-31;                 // kg
-  const M_P = 1.67262192369e-27;              // kg (proton)
-  const EPS0 = 8.854187817e-12;               // F/m
+  var MU0 = 4 * Math.PI * 1e-7;       // H/m
+  var E_CHARGE = 1.602176634e-19;     // C
+  var M_E     = 9.10938356e-31;       // kg
+  var M_P     = 1.67262192369e-27;    // kg
+  var EPS0    = 8.854187817e-12;      // F/m
 
-  const ION_MASSES = {
-    H:  1.0  * M_P,
-    D:  2.014 * M_P,
-    T:  3.016 * M_P,
+  var ION_MASSES = {
+    H:   1.0   * M_P,
+    D:   2.014 * M_P,
+    T:   3.016 * M_P,
     He3: 3.016 * M_P,
     He4: 4.0026 * M_P
   };
 
-  const ION_LABELS = {
+  var ION_LABELS = {
     H:   'H⁺',
     D:   'D⁺',
     T:   'T⁺',
@@ -759,7 +694,7 @@
   };
 
   /* ==================================================================
-   *  Helper: get numeric value from input, with fallback
+   *  Helpers
    * ================================================================ */
   function gv(id, fallback) {
     var v = parseFloat(document.getElementById(id).value);
@@ -770,10 +705,10 @@
     return document.getElementById(id).value;
   }
 
-  function setOutput(id, rows) {
-    var el = document.getElementById(id);
+  function renderOutput(elId, rows) {
+    var el = document.getElementById(elId);
     if (!rows || rows.length === 0) {
-      el.innerHTML = '<div class="output-empty">无输出</div>';
+      el.innerHTML = '<div class="output-row"><span class="olabel">无输出</span></div>';
       return;
     }
     var html = '';
@@ -790,284 +725,256 @@
     el.innerHTML = html;
   }
 
-  /* ==================================================================
-   *  Coulomb logarithm auto-estimate
-   *  lnΛ = 24 − ln(√(n_20) / T_keV)
-   *  n_20 = n_e in 10²⁰ m⁻³
-   * ================================================================ */
   function lnLambda(ne20, Te_keV) {
     var val = 24 - Math.log(Math.sqrt(ne20) / Te_keV);
-    return Math.max(val, 5);   // clamp unrealistically low values
+    return Math.max(val, 5);
   }
 
   /* ==================================================================
-   *  Tool 1: Plasma Self-Inductance
-   *  Lp = μ₀R[ln(8R/a) − 2 + li/2]
+   *  Core recalc — reads all params, runs all tools
    * ================================================================ */
-  function calcPlasmaInductance() {
-    var R  = gv('lp-R');
-    var a  = gv('lp-a');
-    var li = gv('lp-li');
-    var Ip = gv('lp-Ip');
-
-    if (R <= 0 || a <= 0 || R <= a) {
-      setOutput('lp-output', [ { label: '⚠ 输入错误', value: 'R > a > 0 是必要的', warn: true } ]);
-      return;
-    }
-
-    var aspect = R / a;
-    var L_ext  = MU0 * R * (Math.log(8 * aspect) - 2);
-    var L_int  = MU0 * R * li / 2;
-    var Lp     = L_ext + L_int;
-
-    var rows = [
-      { label: 'L_ext (外部电感)', value: (L_ext * 1e6).toFixed(3), unit: 'μH' },
-      { label: 'L_int (内部电感)', value: (L_int * 1e6).toFixed(3), unit: 'μH' },
-      { label: 'L_p (总电感)',     value: (Lp * 1e6).toFixed(3),    unit: 'μH', highlight: true }
-    ];
-
-    if (Ip > 0) {
-      var Wmag = 0.5 * Lp * (Ip * 1e6) * (Ip * 1e6);
-      rows.push({ label: 'W_mag (储磁能)', value: (Wmag / 1e6).toFixed(2), unit: 'MJ' });
-    }
-
-    rows.push(
-      { label: 'R/a (环径比)', value: aspect.toFixed(2) },
-      { label: '参考公式', value: 'Lₚ = μ₀R[ln(8R/a)−2 + lᵢ/2]' }
-    );
-
-    setOutput('lp-output', rows);
-  }
-
-  /* ==================================================================
-   *  Tool 2: Characteristic Frequencies
-   * ================================================================ */
-  function calcFrequencies() {
-    var B  = gv('fr-B');
-    var ne = gv('fr-ne');
-    var ion = gs('fr-ion');
-
-    if (B <= 0 || ne <= 0) {
-      setOutput('fr-output', [ { label: '⚠ 输入错误', value: 'B 和 nₑ 必须为正数', warn: true } ]);
-      return;
-    }
+  function recalc() {
+    // --- Read shared params ---
+    var R     = gv('p-R');
+    var a     = gv('p-a');
+    var Bt    = gv('p-Bt');
+    var Ip    = gv('p-Ip');
+    var ne    = gv('p-ne');
+    var Te    = gv('p-Te');
+    var Ti    = gv('p-Ti');
+    var kappa = gv('p-kappa');
+    var delta = gv('p-delta');
+    var li    = gv('p-li');
+    var Zeff  = gv('p-Zeff');
+    var ion   = gs('p-ion');
 
     var mi = ION_MASSES[ion] || (2.014 * M_P);
     var ionLabel = ION_LABELS[ion] || 'D⁺';
 
-    // Electron cyclotron
-    var f_ce = E_CHARGE * B / (2 * Math.PI * M_E);           // Hz
-    // Ion cyclotron
-    var f_ci = E_CHARGE * B / (2 * Math.PI * mi);            // Hz
-    // Plasma frequency (electron)
-    var w_pe = Math.sqrt(ne * 1e20 * E_CHARGE * E_CHARGE / (EPS0 * M_E));
-    var f_pe = w_pe / (2 * Math.PI);
-    // Lower hybrid
-    var w_ce = 2 * Math.PI * f_ce;
-    var w_ci = 2 * Math.PI * f_ci;
-    var w_pi = w_pe * Math.sqrt(M_E / mi);   // ω_pi² = ω_pe² · (m_e/m_i)
-    var w_LH_sq = (w_ci * w_ci) + (w_pi * w_pi) / (1 + w_pe * w_pe / (w_ce * w_ce));
-    var f_LH = Math.sqrt(Math.max(w_LH_sq, 0)) / (2 * Math.PI);
+    var valid = (R > 0 && a > 0 && Bt > 0 && R > a);
 
-    setOutput('fr-output', [
-      { label: 'f_ce（电子回旋频率）',   value: (f_ce / 1e9).toFixed(3),   unit: 'GHz' },
-      { label: 'f_ci（' + ionLabel + ' 回旋频率）', value: (f_ci / 1e6).toFixed(3), unit: 'MHz' },
-      { label: 'f_pe（电子等离子体频率）', value: (f_pe / 1e9).toFixed(3), unit: 'GHz' },
-      { label: 'f_LH（下混合频率）',     value: (f_LH / 1e9).toFixed(4),  unit: 'GHz', highlight: true },
-      { label: 'ω_ce / ω_pe',           value: (w_ce / w_pe).toFixed(2) },
-      { label: 'ω_pe / ω_ce',           value: (w_pe / w_ce).toFixed(2) },
-    ]);
-  }
+    // ====== Tool 1: Plasma Self-Inductance ======
+    if (valid) {
+      var aspect = R / a;
+      var L_ext  = MU0 * R * (Math.log(8 * aspect) - 2);
+      var L_int  = MU0 * R * li / 2;
+      var Lp     = L_ext + L_int;
+      var Wmag   = (Ip > 0) ? 0.5 * Lp * (Ip * 1e6) * (Ip * 1e6) : 0;
 
-  /* ==================================================================
-   *  Tool 3: Spitzer Resistivity
-   * ================================================================ */
-  function calcSpitzer() {
-    var T   = gv('sp-T');
-    var ne  = gv('sp-ne');
-    var Z   = gv('sp-Z');
-    var R   = gv('sp-R');
-
-    if (T <= 0 || ne <= 0) {
-      setOutput('sp-output', [ { label: '⚠ 输入错误', value: 'Tₑ 和 nₑ 必须为正数', warn: true } ]);
-      return;
-    }
-
-    var lnL = lnLambda(ne, T);
-    // η_∥ = 1.65e-9 × Z × lnΛ / T_e^{3/2}
-    var eta_par = 1.65e-9 * Z * lnL / Math.pow(T, 1.5);
-    var eta_perp = eta_par * 2.0;  // classical approx
-
-    var rows = [
-      { label: 'lnΛ (库仑对数)', value: lnL.toFixed(1) },
-      { label: 'η_∥ (平行电阻率)', value: eta_par.toExponential(3), unit: 'Ω·m', highlight: true },
-      { label: 'η_⊥ (垂直电阻率)', value: eta_perp.toExponential(3), unit: 'Ω·m' },
-    ];
-
-    // Resistive time τ_R = μ₀ a² / (2 η_∥) for circular
-    if (R > 0) {
-      var tauR = MU0 * R * R / (2 * eta_par);
-      var tauR_str = tauR > 3600
-        ? (tauR / 3600).toFixed(1) + ' h'
-        : tauR > 60
-          ? (tauR / 60).toFixed(1) + ' min'
-          : tauR.toFixed(1) + ' s';
-      rows.push({ label: 'τ_R ≈ μ₀R²/(2η_∥)', value: tauR_str, unit: '' });
-    }
-
-    setOutput('sp-output', rows);
-  }
-
-  /* ==================================================================
-   *  Tool 4: Plasma Beta
-   * ================================================================ */
-  function calcBeta() {
-    var ne  = gv('bt-ne');
-    var Te  = gv('bt-Te');
-    var Ti  = gv('bt-Ti');
-    var B   = gv('bt-B');
-    var a   = gv('bt-a');
-    var Ip  = gv('bt-Ip');
-
-    if (B <= 0 || ne <= 0) {
-      setOutput('bt-output', [ { label: '⚠ 输入错误', value: 'nₑ 和 B 必须为正数', warn: true } ]);
-      return;
-    }
-
-    // thermal pressure: p = ne(Te+Ti) × e × 10³  [Pa], ne in 10²⁰, T in keV
-    var p = ne * 1e20 * (Te + Ti) * E_CHARGE * 1000;
-    // beta_toroidal
-    var beta_t = 2 * MU0 * p / (B * B);
-    var beta_t_pct = beta_t * 100;
-
-    var rows = [
-      { label: '⟨p⟩ (热压)',   value: p.toExponential(3), unit: 'Pa' },
-      { label: 'β_t (环向 β)', value: beta_t_pct.toFixed(3), unit: '%', highlight: true },
-    ];
-
-    if (a > 0 && Ip > 0) {
-      // beta_N = β_t[%] × a[m] × Bt[T] / Ip[MA]
-      var beta_N = beta_t_pct * a * B / Ip;
-
-      var troyon = 3.5;
-      var ratio = (beta_N / troyon * 100);
-      var pctStr = ratio > 100 ? '> Troyon 极限!' : ratio.toFixed(0) + '% of Troyon';
-
-      rows.push(
-        { label: 'β_N (归一化 β)',        value: beta_N.toFixed(3), unit: '%·m·T/MA', highlight: true },
-        { label: 'Troyon 极限 β_N ≈ 3.5', value: pctStr, unit: '', warn: ratio > 100 }
-      );
-
-      // Beta poloidal (approx for comparison)
-      // β_p = β_t × (Bt/Bp_avg)²
-      // Bp_avg ≈ μ₀Ip / (2πa_eff), a_eff = a√((1+κ²)/2)
-      var kappaEst = 1.7;
-      var aEff = a * Math.sqrt((1 + kappaEst * kappaEst) / 2);
-      var Bp = MU0 * (Ip * 1e6) / (2 * Math.PI * aEff);
-      if (Bp > 0) {
-        var beta_p = beta_t_pct / 100 * (B / Bp) * (B / Bp);
-        rows.push({ label: 'β_p (极向 β, κ≈' + kappaEst + ')', value: (beta_p * 100).toFixed(1), unit: '%' });
+      var rows = [
+        { label: 'L_ext (外部电感)', value: (L_ext * 1e6).toFixed(3), unit: 'μH' },
+        { label: 'L_int (内部电感)', value: (L_int * 1e6).toFixed(3), unit: 'μH' },
+        { label: 'L_p (总电感)',     value: (Lp * 1e6).toFixed(3),    unit: 'μH', highlight: true }
+      ];
+      if (Ip > 0) {
+        rows.push({ label: 'W_mag (储磁能)', value: (Wmag / 1e6).toFixed(1), unit: 'MJ' });
       }
-    }
-
-    setOutput('bt-output', rows);
-  }
-
-  /* ==================================================================
-   *  Tool 5: Safety Factor q
-   * ================================================================ */
-  function calcSafetyFactor() {
-    var R     = gv('q-R');
-    var a     = gv('q-a');
-    var Bt    = gv('q-B');
-    var Ip    = gv('q-Ip');
-    var kappa = gv('q-kappa');
-    var delta = gv('q-delta');
-
-    if (R <= 0 || a <= 0 || Bt <= 0 || Ip <= 0) {
-      setOutput('q-output', [ { label: '⚠ 输入错误', value: '所有参数必须为正数', warn: true } ]);
-      return;
-    }
-
-    var eps = a / R;
-    var f_kap = (1 + kappa * kappa) / 2;
-
-    // q_cyl = 5 a² Bt / (R Ip) × (1+κ²)/2
-    var q_cyl = 5 * a * a * Bt / (R * Ip) * f_kap;
-
-    // q_95 approx (Fisip-like)
-    var denom = 1 - eps * eps;
-    var q95_factor, eps2 = eps * eps;
-    var q95_factor = (denom > 0.01)
-      ? (1 + 1.22 * eps2 + 1.78 * eps2 * eps2) / (denom * denom)
-      : 1.0;
-    var q95 = q_cyl * q95_factor;
-
-    // Edge safety factor approx including δ
-    var q_edge = q_cyl * (1 - eps * eps * (1 + 0.5 * delta + 0.5 * delta * delta * kappa * kappa));
-
-    setOutput('q-output', [
-      { label: 'ε = a/R (反环径比)', value: eps.toFixed(3) },
-      { label: 'q_cyl (柱状近似)',   value: q_cyl.toFixed(3), unit: '', highlight: true },
-      { label: 'q_95 (95% 磁面)',    value: q95.toFixed(3),   unit: '' },
-      { label: 'q_edge (边界近似)',  value: q_edge.toFixed(3), unit: '' },
-      { label: 'f(κ) = (1+κ²)/2',   value: f_kap.toFixed(3) },
-    ]);
-  }
-
-  /* ==================================================================
-   *  Tool 6: Larmor Radius
-   * ================================================================ */
-  function calcLarmor() {
-    var B   = gv('lr-B');
-    var T   = gv('lr-T');
-    var sp  = gs('lr-species');
-
-    if (B <= 0 || T <= 0) {
-      setOutput('lr-output', [ { label: '⚠ 输入错误', value: 'B 和 T 必须为正数', warn: true } ]);
-      return;
-    }
-
-    var mass, charge, label;
-    if (sp === 'e') {
-      mass = M_E;
-      charge = E_CHARGE;
-      label = '电子';
+      rows.push({ label: 'R/a (环径比)', value: aspect.toFixed(2) });
+      renderOutput('out-lp', rows);
     } else {
-      mass = ION_MASSES[sp] || (2.014 * M_P);
-      charge = (sp === 'He3' || sp === 'He4') ? 2 * E_CHARGE : E_CHARGE;
-      label = ION_LABELS[sp] || sp;
+      renderOutput('out-lp', [{ label: '⚠ 参数无效', value: '请确保 R > a > 0', warn: true }]);
     }
 
-    // ρ = √(2mkT) / (|q|B)  using thermal velocity
-    var T_joule = T * 1000 * E_CHARGE;
-    var rho = Math.sqrt(2 * mass * T_joule) / (charge * B);
-    var rho_mm = rho * 1000;
+    // ====== Tool 2: Characteristic Frequencies ======
+    if (Bt > 0 && ne > 0) {
+      var f_ce = E_CHARGE * Bt / (2 * Math.PI * M_E);
+      var f_ci = E_CHARGE * Bt / (2 * Math.PI * mi);
+      var w_pe = Math.sqrt(ne * 1e20 * E_CHARGE * E_CHARGE / (EPS0 * M_E));
+      var f_pe = w_pe / (2 * Math.PI);
+      var w_ce = 2 * Math.PI * f_ce;
+      var w_ci = 2 * Math.PI * f_ci;
+      var w_pi = w_pe * Math.sqrt(M_E / mi);
+      var f_LH = Math.sqrt(w_ci * w_ci + w_pi * w_pi / (1 + w_pe * w_pe / (w_ce * w_ce))) / (2 * Math.PI);
 
-    // Energy-dependent Larmor radius for 2×T and 0.5×T
-    var rho_2T = Math.sqrt(2 * mass * T_joule * 2) / (charge * B) * 1000;
-    var rho_halfT = Math.sqrt(2 * mass * T_joule * 0.5) / (charge * B) * 1000;
+      renderOutput('out-fr', [
+        { label: 'f_ce（电子回旋）',   value: (f_ce / 1e9).toFixed(3),   unit: 'GHz' },
+        { label: 'f_ci（' + ionLabel + ' 回旋）', value: (f_ci / 1e6).toFixed(3), unit: 'MHz' },
+        { label: 'f_pe（电子等离子体）', value: (f_pe / 1e9).toFixed(3),   unit: 'GHz' },
+        { label: 'f_LH（下混合）',     value: (f_LH / 1e9).toFixed(4),   unit: 'GHz', highlight: true },
+        { label: 'ω_ce / ω_pe',       value: (w_ce / w_pe).toFixed(2) },
+        { label: 'ω_pe / ω_ce',       value: (w_pe / w_ce).toFixed(2) }
+      ]);
+    } else {
+      renderOutput('out-fr', [{ label: '⚠ 参数无效', value: '需 Bₜ > 0 且 nₑ > 0', warn: true }]);
+    }
 
-    setOutput('lr-output', [
-      { label: label + ' 拉莫尔半径 (v_th)',  value: rho_mm.toFixed(4), unit: 'mm', highlight: true },
-      { label: '  ∟ 按 v = v_th (√(kT/m))', value: '' },
-      { label: '  ∟ 按 E = 2T (高能)',       value: rho_2T.toFixed(4),   unit: 'mm' },
-      { label: '  ∟ 按 E = T/2 (低能)',      value: rho_halfT.toFixed(4), unit: 'mm' },
-    ]);
+    // ====== Tool 3: Spitzer Resistivity ======
+    if (Te > 0 && ne > 0) {
+      var lnL = lnLambda(ne, Te);
+      var eta_par = 1.65e-9 * Zeff * lnL / Math.pow(Te, 1.5);
+      var eta_perp = eta_par * 2.0;
+      var rows = [
+        { label: 'lnΛ (库仑对数)',        value: lnL.toFixed(1) },
+        { label: 'η_∥ (平行电阻率)',      value: eta_par.toExponential(3),  unit: 'Ω·m', highlight: true },
+        { label: 'η_⊥ (垂直电阻率)',      value: eta_perp.toExponential(3), unit: 'Ω·m' }
+      ];
+      if (a > 0) {
+        var tauR = MU0 * a * a / (2 * eta_par);
+        var u = tauR > 86400 ? (tauR / 86400).toFixed(1) + ' d'
+              : tauR > 3600  ? (tauR / 3600).toFixed(1) + ' h'
+              : tauR > 60    ? (tauR / 60).toFixed(1) + ' min'
+              :                 tauR.toFixed(1) + ' s';
+        rows.push({ label: 'τ_R ≈ μ₀a²/(2η_∥)', value: u });
+      }
+      renderOutput('out-sp', rows);
+    } else {
+      renderOutput('out-sp', [{ label: '⚠ 参数无效', value: '需 Tₑ > 0 且 nₑ > 0', warn: true }]);
+    }
+
+    // ====== Tool 4: Plasma Beta ======
+    if (ne > 0 && Bt > 0) {
+      var p = ne * 1e20 * (Te + Ti) * E_CHARGE * 1000;
+      var beta_t = 2 * MU0 * p / (Bt * Bt);
+      var beta_t_pct = beta_t * 100;
+      var rows = [
+        { label: '⟨p⟩ (热压)',   value: p.toExponential(3), unit: 'Pa' },
+        { label: 'β_t (环向 β)', value: beta_t_pct.toFixed(3), unit: '%', highlight: true }
+      ];
+      if (a > 0 && Ip > 0) {
+        var beta_N_val = beta_t_pct * a * Bt / Ip;
+        var ratio = beta_N_val / 3.5 * 100;
+        rows.push(
+          { label: 'β_N (归一化 β)', value: beta_N_val.toFixed(3), unit: '%·m·T/MA', highlight: true },
+          { label: 'Troyon 极限',    value: ratio > 100 ? '⚠ 超出极限!' : ratio.toFixed(0) + '%', warn: ratio > 100 }
+        );
+        // beta_p
+        var kE = kappa || 1.7;
+        var aEff = a * Math.sqrt((1 + kE * kE) / 2);
+        var Bp = MU0 * (Ip * 1e6) / (2 * Math.PI * aEff);
+        if (Bp > 0) {
+          var beta_p = beta_t * (Bt / Bp) * (Bt / Bp);
+          rows.push({ label: 'β_p (极向 β)', value: (beta_p * 100).toFixed(1), unit: '%' });
+        }
+      }
+      renderOutput('out-bt', rows);
+    } else {
+      renderOutput('out-bt', [{ label: '⚠ 参数无效', value: '需 nₑ > 0 且 Bₜ > 0', warn: true }]);
+    }
+
+    // ====== Tool 5: Safety Factor ======
+    if (valid && Ip > 0 && kappa > 0) {
+      var eps = a / R;
+      var eps2 = eps * eps;
+      var q_cyl = 5 * a * a * Bt / (R * Ip) * (1 + kappa * kappa) / 2;
+      var denom = 1 - eps2;
+      var q95_factor = (denom > 0.01)
+        ? (1 + 1.22 * eps2 + 1.78 * eps2 * eps2) / (denom * denom)
+        : 1.0;
+      var q95 = q_cyl * q95_factor;
+      var q_edge = q_cyl * (1 - eps2 * (1 + 0.5 * delta + 0.5 * delta * delta * kappa * kappa));
+
+      renderOutput('out-q', [
+        { label: 'ε = a/R',       value: eps.toFixed(3) },
+        { label: 'q_cyl (柱状)',  value: q_cyl.toFixed(3), unit: '', highlight: true },
+        { label: 'q_95 (95% 磁面)', value: q95.toFixed(3), unit: '' },
+        { label: 'q_edge (边界)',  value: q_edge.toFixed(3), unit: '' },
+        { label: 'f(κ)',          value: ((1+kappa*kappa)/2).toFixed(3) }
+      ]);
+    } else {
+      renderOutput('out-q', [{ label: '⚠ 参数无效', value: '需 R > a > 0, Ip > 0', warn: true }]);
+    }
+
+    // ====== Tool 6: Larmor Radius ======
+    if (Bt > 0) {
+      var rows = [];
+
+      // Electron: use Te
+      if (Te > 0) {
+        var rho_e = Math.sqrt(2 * M_E * Te * 1000 * E_CHARGE) / (E_CHARGE * Bt) * 1000;
+        rows.push({ label: 'ρ_e (电子, vₜₕ, Tₑ=' + Te + 'keV)', value: rho_e.toFixed(4), unit: 'mm', highlight: true });
+      }
+      // H⁺
+      if (Ti > 0) {
+        var rho_H = Math.sqrt(2 * M_P * Ti * 1000 * E_CHARGE) / (E_CHARGE * Bt) * 1000;
+        rows.push({ label: 'ρ_H (质子, vₜₕ, Tᵢ=' + Ti + 'keV)', value: rho_H.toFixed(4), unit: 'mm' });
+      }
+      // D⁺
+      if (Ti > 0) {
+        var rho_D = Math.sqrt(2 * (2.014 * M_P) * Ti * 1000 * E_CHARGE) / (E_CHARGE * Bt) * 1000;
+        rows.push({ label: 'ρ_D (氘, vₜₕ, Tᵢ=' + Ti + 'keV)', value: rho_D.toFixed(4), unit: 'mm' });
+      }
+      // T⁺
+      if (Ti > 0) {
+        var rho_T = Math.sqrt(2 * (3.016 * M_P) * Ti * 1000 * E_CHARGE) / (E_CHARGE * Bt) * 1000;
+        rows.push({ label: 'ρ_T (氚, vₜₕ, Tᵢ=' + Ti + 'keV)', value: rho_T.toFixed(4), unit: 'mm' });
+      }
+      // α
+      if (Ti > 0) {
+        var rho_α = Math.sqrt(2 * (4.0026 * M_P) * Ti * 1000 * E_CHARGE) / (2 * E_CHARGE * Bt) * 1000;
+        rows.push({ label: 'ρ_α (α粒子, vₜₕ, Tᵢ=' + Ti + 'keV)', value: rho_α.toFixed(4), unit: 'mm' });
+      }
+
+      // Also show the selected ion's Larmor radius
+      var mi_lr = ION_MASSES[ion] || (2.014 * M_P);
+      var qi_lr = (ion === 'He3' || ion === 'He4') ? 2 * E_CHARGE : E_CHARGE;
+      var Ti_use = Ti > 0 ? Ti : Te;
+      if (Ti_use > 0) {
+        var rho_sel = Math.sqrt(2 * mi_lr * Ti_use * 1000 * E_CHARGE) / (qi_lr * Bt) * 1000;
+        rows.push({ label: ionLabel + ' (当前选择, T=' + Ti_use + 'keV)', value: rho_sel.toFixed(4), unit: 'mm' });
+      }
+
+      renderOutput('out-lr', rows);
+    } else {
+      renderOutput('out-lr', [{ label: '⚠ 参数无效', value: '需 Bₜ > 0', warn: true }]);
+    }
   }
 
   /* ==================================================================
-   *  Auto-run on page load with default values
+   *  Sidebar toggle → show/hide panels
+   * ================================================================ */
+  function bindToggles() {
+    var toggles = document.querySelectorAll('.tool-toggle');
+    toggles.forEach(function(t) {
+      var cb = t.querySelector('input[type="checkbox"]');
+      var tool = t.getAttribute('data-tool');
+      var panel = document.getElementById('panel-' + tool);
+
+      function update() {
+        var checked = cb.checked;
+        if (panel) {
+          panel.classList.toggle('hidden', !checked);
+        }
+        t.classList.toggle('active', checked);
+        updatePlaceholder();
+      }
+
+      cb.addEventListener('change', update);
+
+      // Also click on the label toggles the checkbox
+      t.addEventListener('click', function(e) {
+        if (e.target !== cb) {
+          cb.checked = !cb.checked;
+          update();
+        }
+      });
+    });
+  }
+
+  function updatePlaceholder() {
+    var anyChecked = false;
+    document.querySelectorAll('.tool-toggle input[type="checkbox"]').forEach(function(cb) {
+      if (cb.checked) anyChecked = true;
+    });
+    var placeholder = document.getElementById('no-selection');
+    if (placeholder) {
+      placeholder.style.display = anyChecked ? 'none' : 'block';
+    }
+  }
+
+  /* ==================================================================
+   *  Init
    * ================================================================ */
   window.addEventListener('DOMContentLoaded', function() {
-    calcPlasmaInductance();
-    calcFrequencies();
-    calcSpitzer();
-    calcBeta();
-    calcSafetyFactor();
-    calcLarmor();
-  });
+    bindToggles();
+    recalc();
 
+    // Recalc on any param change
+    var paramInputs = document.querySelectorAll('.param-group input, .param-group select');
+    paramInputs.forEach(function(el) {
+      el.addEventListener('input', recalc);
+      el.addEventListener('change', recalc);
+    });
+  });
   </script>
 </body>
 </html>
