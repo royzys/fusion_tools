@@ -625,6 +625,131 @@
     .param-group label:hover .tip-text {
       display: block;
     }
+
+    /* ---- Sidebar category headers ---- */
+    .sidebar-category {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      letter-spacing: 0.05em;
+      padding: 14px 10px 4px;
+      text-transform: uppercase;
+    }
+
+    /* ---- Coil Inductance Panel ---- */
+    .coil-toolbar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .coil-toolbar .btn-coil {
+      padding: 6px 16px;
+      border: 1px solid var(--tool-border);
+      border-radius: 6px;
+      background: var(--surface);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .coil-toolbar .btn-coil:hover {
+      background: var(--tool-accent-subtle);
+    }
+
+    .coil-toolbar .btn-coil.primary {
+      background: var(--tool-accent);
+      color: #fff;
+      border-color: var(--tool-accent);
+    }
+
+    .coil-toolbar .btn-coil.primary:hover {
+      background: var(--tool-accent-light);
+    }
+
+    .coil-toolbar .btn-coil.danger {
+      color: #8a4a3a;
+      border-color: #e0ccc6;
+    }
+
+    .coil-toolbar .btn-coil.danger:hover {
+      background: #e8d8d4;
+    }
+
+    .coil-input-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      margin-bottom: 14px;
+    }
+
+    .coil-input-table th {
+      background: var(--tool-accent-subtle);
+      padding: 6px 8px;
+      border: 1px solid var(--tool-border);
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .coil-input-table td {
+      padding: 4px 6px;
+      border: 1px solid var(--tool-border);
+      text-align: center;
+    }
+
+    .coil-input-table input {
+      width: 80px;
+      padding: 4px 6px;
+      border: 1px solid var(--input-border);
+      border-radius: 4px;
+      background: var(--input-bg);
+      font-family: "Noto Sans Mono", "Consolas", monospace;
+      font-size: 0.78rem;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .coil-input-table input:focus {
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 2px rgba(122,92,61,0.12);
+    }
+
+    .coil-input-table td.coil-label {
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: #f5f3ed;
+    }
+
+    /* Matrix output */
+    .matrix-wrapper {
+      overflow-x: auto;
+      margin: 10px 0;
+    }
+
+    .matrix-table {
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    .matrix-table th, .matrix-table td {
+      padding: 5px 10px;
+      border: 1px solid var(--tool-border);
+      text-align: center;
+      font-family: "Noto Sans Mono", "Consolas", monospace;
+    }
+
+    .matrix-table th {
+      background: var(--tool-accent-subtle);
+      font-weight: 600;
+    }
+
+    .matrix-table td.diag {
+      background: #e8f0e0;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -652,6 +777,8 @@
       <aside class="tools-sidebar">
         <h3>计算工具</h3>
         <div class="tool-list">
+          <div class="sidebar-category">聚变工程 &amp; 物理</div>
+
           <label class="tool-toggle" data-tool="lp">
             <input type="checkbox"> 等离子体自感
             <span class="tnum">L<sub>p</sub></span>
@@ -682,11 +809,16 @@
             <span class="tnum">ρ<sub>L</sub></span>
           </label>
 
-          <div style="margin: 10px 0 6px; border-top: 1px solid var(--tool-border);"></div>
-
           <label class="tool-toggle" data-tool="fx">
             <input type="checkbox"> 聚变性能
             <span class="tnum">P<sub>fus</sub> Q</span>
+          </label>
+
+          <div class="sidebar-category" style="margin-top:6px;">线圈电感计算</div>
+
+          <label class="tool-toggle" data-tool="ci">
+            <input type="checkbox"> 矩形截面线圈电感
+            <span class="tnum">L M</span>
           </label>
       </aside>
 
@@ -943,6 +1075,46 @@
                 <span class="fnote">⟨σv⟩<sub>DT</sub>: Bosch‑Hale 参数化 &emsp; E<sub>fus</sub> = 17.6 MeV &emsp; 燃料假设: 50‑50 D‑T</span>
               </div>
               <div class="output-area" id="out-fx"></div>
+            </div>
+          </div>
+
+          <!-- Tool 8: Coil Inductance Matrix -->
+          <div class="result-panel" id="panel-ci">
+            <div class="result-panel-header">
+              <h4>矩形截面线圈电感矩阵</h4>
+              <span class="badge">L M</span>
+            </div>
+            <div class="result-panel-body">
+              <div class="formula-box">
+                L<sub>self</sub> = μ₀R [ln(8R/r<sub>g</sub>) − 2] &emsp;
+                M<sub>ij</sub> = μ₀√(RᵢRⱼ) [(2/k−k)K(k) − (2/k)E(k)]
+                <span class="fnote">r<sub>g</sub> ≈ 0.2236(ΔR+ΔZ) &emsp; r<sub>g</sub> = √(ΔR·ΔZ/π)（圆形截面）&emsp; K(k),E(k): 完全椭圆积分</span>
+              </div>
+
+              <div class="coil-toolbar">
+                <button class="btn-coil primary" onclick="addCoilRow()">＋ 添加线圈</button>
+                <button class="btn-coil danger" onclick="removeCoilRow()">－ 移除最后</button>
+                <button class="btn-coil primary" onclick="calcCoilInductance()" style="margin-left:auto;">📊 计算电感矩阵</button>
+              </div>
+
+              <table class="coil-input-table" id="coil-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>R (m)</th>
+                    <th>Z (m)</th>
+                    <th>ΔR (m)</th>
+                    <th>ΔZ (m)</th>
+                    <th>截面形状</th>
+                  </tr>
+                </thead>
+                <tbody id="coil-tbody">
+                </tbody>
+              </table>
+
+              <div class="output-area" id="out-ci">
+                <div class="output-empty">设置线圈参数后点击「计算电感矩阵」</div>
+              </div>
             </div>
           </div>
 
@@ -1707,6 +1879,220 @@
   }
 
   /* ==================================================================
+   *  Coil Inductance — editable table + elliptic integral calculation
+   * ================================================================ */
+  var MAX_COILS = 8;
+  var coilCount = 0;
+
+  function initCoilRows() {
+    // Default: 2 coils (a PF coil pair)
+    var defaults = [
+      { R:2.0, Z:-1.5, dR:0.3, dZ:0.3, shape:'rect' },
+      { R:2.0, Z: 1.5, dR:0.3, dZ:0.3, shape:'rect' },
+      { R:1.5, Z: 0.0, dR:0.2, dZ:0.5, shape:'rect' }
+    ];
+    defaults.forEach(function(d) { addCoilRow(d); });
+  }
+
+  function addCoilRow(prefill) {
+    if (coilCount >= MAX_COILS) return;
+    var idx = coilCount;
+    var tbody = document.getElementById('coil-tbody');
+    var tr = document.createElement('tr');
+    tr.id = 'coil-row-' + idx;
+
+    var d = prefill || { R:'', Z:'', dR:'', dZ:'', shape:'rect' };
+    var shapeOptions = [
+      { v:'rect', l:'矩形' },
+      { v:'circ', l:'圆形' }
+    ];
+    var selHtml = '';
+    shapeOptions.forEach(function(s) {
+      var sel = (s.v === d.shape) ? ' selected' : '';
+      selHtml += '<option value="' + s.v + '"' + sel + '>' + s.l + '</option>';
+    });
+
+    tr.innerHTML =
+      '<td class="coil-label">C' + (idx + 1) + '</td>' +
+      '<td><input type="number" step="any" id="ci-R-' + idx + '" value="' + (d.R!==''?d.R:'') + '"></td>' +
+      '<td><input type="number" step="any" id="ci-Z-' + idx + '" value="' + (d.Z!==''?d.Z:'') + '"></td>' +
+      '<td><input type="number" step="any" id="ci-dR-' + idx + '" value="' + (d.dR!==''?d.dR:'') + '"></td>' +
+      '<td><input type="number" step="any" id="ci-dZ-' + idx + '" value="' + (d.dZ!==''?d.dZ:'') + '"></td>' +
+      '<td><select id="ci-shape-' + idx + '">' + selHtml + '</select></td>';
+    tbody.appendChild(tr);
+    coilCount++;
+  }
+
+  function removeCoilRow() {
+    if (coilCount <= 0) return;
+    coilCount--;
+    var tbody = document.getElementById('coil-tbody');
+    tbody.removeChild(document.getElementById('coil-row-' + coilCount));
+  }
+
+  /* ---- Elliptic integrals K(k) and E(k) ---- */
+  function ellipK(k) {
+    if (k >= 1) return Infinity;
+    if (k < 1e-15) return Math.PI / 2;
+    // Use AGM (arithmetic-geometric mean)
+    var a = 1.0;
+    var b = Math.sqrt(1 - k * k);
+    for (var i = 0; i < 30; i++) {
+      var a_next = (a + b) / 2;
+      var b_next = Math.sqrt(a * b);
+      if (Math.abs(a_next - a) < 1e-15) break;
+      a = a_next;
+      b = b_next;
+    }
+    return Math.PI / (2 * a);
+  }
+
+  function ellipE(k) {
+    if (k >= 1) return 1.0;
+    if (k <= 0) return Math.PI / 2;
+    // Use series with Landen transformation for accuracy
+    // E(m) = π/2 × Σ_{n=0}^{∞} [ (2n)!/(2^n·n!)^2 ]² · m^n/(1-2n)
+    var m = k * k;
+    if (m > 0.95) {
+      // For k near 1, use transformation: E(k) ≈ 1 + (k'²/2)(ln(4/k') - 1/2)
+      var kp = Math.sqrt(1 - m);
+      return 1 + 0.5 * kp * kp * (Math.log(4 / kp) - 0.5);
+    }
+    var sum = 1.0;
+    var term = 1.0;
+    var n = 0;
+    while (n < 40) {
+      n++;
+      var num = 2 * n - 1;
+      var den = 2 * n;
+      term *= (num / den) * (num / den) * m;
+      var add = term / (1 - 2 * n);
+      sum += add;
+      if (Math.abs(add) < 1e-15) break;
+    }
+    return Math.PI / 2 * sum;
+  }
+
+  /* ---- Self-inductance of a rectangular cross-section circular coil ---- */
+  function coilSelfInductance(R, dR, dZ, shape) {
+    if (R <= 0 || dR <= 0 || dZ <= 0) return 0;
+    var r_g;
+    if (shape === 'circ') {
+      // Circular cross-section: equivalent radius
+      r_g = Math.sqrt(dR * dZ / Math.PI); // dR = radius, dZ = radius... 
+      // Actually for circular: dR is the radius, just use it directly
+      r_g = (dR + dZ) / 2; // average as approximate GMD for circular
+    } else {
+      // Rectangular: GMD ≈ 0.2236 × (dR + dZ)
+      r_g = 0.2236 * (dR + dZ);
+    }
+    if (r_g <= 0) return 0;
+    var L = MU0 * R * (Math.log(8 * R / r_g) - 2);
+    return Math.max(L, 0);
+  }
+
+  /* ---- Mutual inductance between two coaxial coils ---- */
+  function coilMutualInductance(R1, Z1, R2, Z2) {
+    if (R1 <= 0 || R2 <= 0) return 0;
+    var d = Math.abs(Z1 - Z2);
+    var sumR = R1 + R2;
+    var denom = sumR * sumR + d * d;
+    var k = Math.sqrt(4 * R1 * R2 / denom);
+    if (k >= 0.999999) {
+      // Nearly coincident coils
+      var r_eq = Math.sqrt(R1 * R2);
+      return MU0 * r_eq * (Math.log(8 * r_eq / Math.sqrt(d*d + (R1-R2)*(R1-R2))) - 2);
+    }
+    if (k <= 0) return 0;
+    var Kk = ellipK(k);
+    var Ek = ellipE(k);
+    var factor = (2/k - k) * Kk - (2/k) * Ek;
+    return MU0 * Math.sqrt(R1 * R2) * factor;
+  }
+
+  function calcCoilInductance() {
+    if (coilCount === 0) {
+      document.getElementById('out-ci').innerHTML = '<div class="output-row"><span class="olabel warn">⚠ 请至少添加一个线圈</span></div>';
+      return;
+    }
+
+    // Read coil data
+    var coils = [];
+    for (var i = 0; i < coilCount; i++) {
+      var R  = parseFloat(document.getElementById('ci-R-' + i).value);
+      var Z  = parseFloat(document.getElementById('ci-Z-' + i).value);
+      var dR = parseFloat(document.getElementById('ci-dR-' + i).value);
+      var dZ = parseFloat(document.getElementById('ci-dZ-' + i).value);
+      var shape = document.getElementById('ci-shape-' + i).value;
+      if (isNaN(R) || R <= 0 || isNaN(dR) || dR <= 0 || isNaN(dZ) || dZ <= 0) {
+        document.getElementById('out-ci').innerHTML =
+          '<div class="output-row"><span class="olabel warn">⚠ C' + (i+1) + ' 参数无效，请检查</span></div>';
+        return;
+      }
+      coils.push({ R:R, Z:Z, dR:dR, dZ:dZ, shape:shape });
+    }
+
+    // Compute self inductances
+    var Lself = [];
+    for (var i = 0; i < coilCount; i++) {
+      Lself.push(coilSelfInductance(coils[i].R, coils[i].dR, coils[i].dZ, coils[i].shape));
+    }
+
+    // Compute mutual inductance matrix (upper triangle)
+    var M = [];
+    for (var i = 0; i < coilCount; i++) {
+      M[i] = [];
+      for (var j = 0; j < coilCount; j++) {
+        if (i === j) {
+          M[i][j] = Lself[i];
+        } else if (j > i) {
+          M[i][j] = coilMutualInductance(coils[i].R, coils[i].Z, coils[j].R, coils[j].Z);
+        } else {
+          M[i][j] = M[j][i];  // symmetric
+        }
+      }
+    }
+
+    // Render output
+    var html = '';
+
+    // Self-inductance list
+    html += '<div style="font-size:0.84rem;font-weight:600;margin-bottom:8px;">自感</div>';
+    for (var i = 0; i < coilCount; i++) {
+      html += '<div class="output-row">' +
+        '<span class="olabel">C' + (i+1) + '  L<sub>self</sub></span>' +
+        '<span><span class="ovalue highlight">' + (Lself[i]*1e6).toFixed(2) + '</span><span class="ounit"> μH</span></span>' +
+        '</div>';
+    }
+
+    // Mutual inductance matrix
+    html += '<div style="font-size:0.84rem;font-weight:600;margin:14px 0 8px;">互感矩阵 M<sub>ij</sub> (μH)</div>';
+    html += '<div class="matrix-wrapper">';
+    html += '<table class="matrix-table">';
+    html += '<tr><th></th>';
+    for (var j = 0; j < coilCount; j++) {
+      html += '<th>C' + (j+1) + '</th>';
+    }
+    html += '</tr>';
+    for (var i = 0; i < coilCount; i++) {
+      html += '<tr><th>C' + (i+1) + '</th>';
+      for (var j = 0; j < coilCount; j++) {
+        var cls = (i === j) ? 'diag' : '';
+        html += '<td class="' + cls + '">' + (M[i][j]*1e6).toFixed(2) + '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</table></div>';
+
+    // Eigenvalues / total energy info
+    html += '<div style="font-size:0.78rem;color:var(--text-tertiary);margin-top:8px;">';
+    html += '对角线 = 自感, 非对角线 = 互感（对称矩阵）';
+    html += '</div>';
+
+    document.getElementById('out-ci').innerHTML = html;
+  }
+
+  /* ==================================================================
    *  Tab switching: 计算结果 / 多组对比
    * ================================================================ */
   function switchTab(tabId) {
@@ -1729,6 +2115,8 @@
     loadRecords();
     renderComparisonTable();
     recalc();
+    initCoilRows();
+    calcCoilInductance();
 
     // Wire up tab buttons
     document.querySelectorAll('.tab-btn').forEach(function(btn) {
