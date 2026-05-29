@@ -554,6 +554,73 @@ footer p {
   }
 }
 
+/* ---- Sponsor Sidebar (fixed right) ---- */
+.sponsor-sidebar {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 172px;
+  text-align: center;
+  padding: 16px 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 999;
+}
+
+.sponsor-sidebar img {
+  display: block;
+  margin: 0 auto;
+}
+
+.sponsor-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sponsor-close:hover {
+  background: var(--accent-subtle);
+  color: var(--text);
+}
+
+@media (max-width: 768px) {
+  .sponsor-sidebar {
+    position: fixed;
+    right: 10px;
+    bottom: 16px;
+    top: auto;
+    transform: none;
+    width: 140px;
+    padding: 12px 10px 14px;
+  }
+  .sponsor-sidebar img {
+    width: 110px !important;
+  }
+  .sponsor-sidebar .sponsor-close {
+    top: 2px;
+    right: 4px;
+  }
+}
+
+@media print {
+  .sponsor-sidebar { display: none; }
+}
+
 /* ---- Print ---- */
 @media print {
   header { position: static; }

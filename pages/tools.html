@@ -712,9 +712,22 @@
       transition: border-color 0.15s;
     }
 
+    .coil-input-table input[type="text"] {
+      font-family: "Noto Sans SC", sans-serif;
+    }
+
     .coil-input-table input:focus {
       border-color: var(--input-focus);
       box-shadow: 0 0 0 2px rgba(122,92,61,0.12);
+    }
+
+    .coil-input-table input[type="text"]:focus {
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 2px rgba(122,92,61,0.12);
+    }
+
+    .coil-input-wrapper {
+      overflow-x: auto;
     }
 
     .coil-input-table td.coil-label {
@@ -1108,20 +1121,24 @@
                 <button class="btn-coil primary" onclick="calcCoilInductance()" style="margin-left:auto;">📊 计算电感矩阵</button>
               </div>
 
+              <div class="coil-input-wrapper">
               <table class="coil-input-table" id="coil-table">
                 <thead>
                   <tr>
                     <th>#</th>
+                    <th>名称</th>
                     <th>R (m)</th>
                     <th>Z (m)</th>
                     <th>ΔR (m)</th>
                     <th>ΔZ (m)</th>
+                    <th>匝数 N</th>
                     <th>截面形状</th>
                   </tr>
                 </thead>
                 <tbody id="coil-tbody">
                 </tbody>
               </table>
+              </div>
 
               <div class="output-area" id="out-ci">
                 <div class="output-empty">设置线圈参数后点击「计算电感矩阵」</div>
@@ -2249,9 +2266,9 @@
   function initCoilRows() {
     // Default: 2 coils (a PF coil pair)
     var defaults = [
-      { R:2.0, Z:-1.5, dR:0.3, dZ:0.3, shape:'rect' },
-      { R:2.0, Z: 1.5, dR:0.3, dZ:0.3, shape:'rect' },
-      { R:1.5, Z: 0.0, dR:0.2, dZ:0.5, shape:'rect' }
+      { name:'PF1', R:2.0, Z:-1.5, dR:0.3, dZ:0.3, N:8, shape:'rect' },
+      { name:'PF2', R:2.0, Z: 1.5, dR:0.3, dZ:0.3, N:8, shape:'rect' },
+      { name:'CS',  R:1.5, Z: 0.0, dR:0.2, dZ:0.5, N:12, shape:'rect' }
     ];
     defaults.forEach(function(d) { addCoilRow(d); });
   }
@@ -2263,7 +2280,8 @@
     var tr = document.createElement('tr');
     tr.id = 'coil-row-' + idx;
 
-    var d = prefill || { R:'', Z:'', dR:'', dZ:'', shape:'rect' };
+    var d = prefill || { name:'', R:'', Z:'', dR:'', dZ:'', N:1, shape:'rect' };
+    var defaultName = d.name !== '' ? d.name : 'C' + (idx + 1);
     var shapeOptions = [
       { v:'rect', l:'矩形' },
       { v:'circ', l:'圆形' }
@@ -2275,11 +2293,13 @@
     });
 
     tr.innerHTML =
-      '<td class="coil-label">C' + (idx + 1) + '</td>' +
+      '<td class="coil-label">' + (idx + 1) + '</td>' +
+      '<td><input type="text" id="ci-name-' + idx + '" value="' + defaultName + '" style="width:70px;padding:4px 6px;border:1px solid var(--input-border);border-radius:4px;background:var(--input-bg);font-family:Noto Sans SC,sans-serif;font-size:0.78rem;text-align:center;outline:none;transition:border-color 0.15s;"></td>' +
       '<td><input type="number" step="any" id="ci-R-' + idx + '" value="' + (d.R!==''?d.R:'') + '"></td>' +
       '<td><input type="number" step="any" id="ci-Z-' + idx + '" value="' + (d.Z!==''?d.Z:'') + '"></td>' +
       '<td><input type="number" step="any" id="ci-dR-' + idx + '" value="' + (d.dR!==''?d.dR:'') + '"></td>' +
       '<td><input type="number" step="any" id="ci-dZ-' + idx + '" value="' + (d.dZ!==''?d.dZ:'') + '"></td>' +
+      '<td><input type="number" step="1" min="1" id="ci-N-' + idx + '" value="' + (d.N||1) + '" style="width:56px;"></td>' +
       '<td><select id="ci-shape-' + idx + '">' + selHtml + '</select></td>';
     tbody.appendChild(tr);
     coilCount++;
@@ -2432,23 +2452,31 @@
     // Read coil data
     var coils = [];
     for (var i = 0; i < coilCount; i++) {
+      var name  = document.getElementById('ci-name-' + i).value.trim() || ('C' + (i+1));
       var R  = parseFloat(document.getElementById('ci-R-' + i).value);
       var Z  = parseFloat(document.getElementById('ci-Z-' + i).value);
       var dR = parseFloat(document.getElementById('ci-dR-' + i).value);
       var dZ = parseFloat(document.getElementById('ci-dZ-' + i).value);
+      var N  = parseInt(document.getElementById('ci-N-' + i).value) || 1;
       var shape = document.getElementById('ci-shape-' + i).value;
-      if (isNaN(R) || R <= 0 || isNaN(dR) || dR <= 0 || isNaN(dZ) || dZ <= 0) {
+      if (isNaN(R) || R <= 0 || isNaN(dR) || dR <= 0 || isNaN(dZ) || dZ <= 0 || N < 1) {
         document.getElementById('out-ci').innerHTML =
-          '<div class="output-row"><span class="olabel warn">⚠ C' + (i+1) + ' 参数无效，请检查</span></div>';
+          '<div class="output-row"><span class="olabel warn">⚠ ' + name + ' 参数无效，请检查</span></div>';
         return;
       }
-      coils.push({ R:R, Z:Z, dR:dR, dZ:dZ, shape:shape });
+      coils.push({ name:name, R:R, Z:Z, dR:dR, dZ:dZ, N:N, shape:shape });
     }
 
-    // Compute self inductances
+    // Compute single-turn self inductances
+    var L1 = [];
+    for (var i = 0; i < coilCount; i++) {
+      L1.push(coilSelfInductance(coils[i].R, coils[i].dR, coils[i].dZ, coils[i].shape));
+    }
+
+    // Scale by N² for full self-inductance
     var Lself = [];
     for (var i = 0; i < coilCount; i++) {
-      Lself.push(coilSelfInductance(coils[i].R, coils[i].dR, coils[i].dZ, coils[i].shape));
+      Lself.push(L1[i] * coils[i].N * coils[i].N);
     }
 
     // Compute mutual inductance matrix (upper triangle)
@@ -2459,7 +2487,8 @@
         if (i === j) {
           M[i][j] = Lself[i];
         } else if (j > i) {
-          M[i][j] = coilMutualInductance(coils[i].R, coils[i].Z, coils[j].R, coils[j].Z, coils[i].dR, coils[i].dZ, coils[j].dR, coils[j].dZ);
+          var M1 = coilMutualInductance(coils[i].R, coils[i].Z, coils[j].R, coils[j].Z, coils[i].dR, coils[i].dZ, coils[j].dR, coils[j].dZ);
+          M[i][j] = M1 * coils[i].N * coils[j].N;
         } else {
           M[i][j] = M[j][i];  // symmetric
         }
@@ -2472,9 +2501,13 @@
     // Self-inductance list
     html += '<div style="font-size:0.84rem;font-weight:600;margin-bottom:8px;">自感</div>';
     for (var i = 0; i < coilCount; i++) {
+      var Ni = coils[i].N;
+      var LperTurn = L1[i] * 1e6;
       html += '<div class="output-row">' +
-        '<span class="olabel">C' + (i+1) + '  L<sub>self</sub></span>' +
-        '<span><span class="ovalue highlight">' + (Lself[i]*1e6).toFixed(2) + '</span><span class="ounit"> μH</span></span>' +
+        '<span class="olabel">' + coils[i].name + '  L<sub>self</sub>' + (Ni > 1 ? ' (N=' + Ni + ')' : '') + '</span>' +
+        '<span><span class="ovalue highlight">' + (Lself[i]*1e6).toFixed(2) + '</span><span class="ounit"> μH' +
+        (Ni > 1 ? ' <span style="font-size:0.7rem;color:var(--text-tertiary);">(' + LperTurn.toFixed(2) + ' μH/turn)</span>' : '') +
+        '</span></span>' +
         '</div>';
     }
 
@@ -2484,11 +2517,11 @@
     html += '<table class="matrix-table">';
     html += '<tr><th></th>';
     for (var j = 0; j < coilCount; j++) {
-      html += '<th>C' + (j+1) + '</th>';
+      html += '<th>' + coils[j].name + '</th>';
     }
     html += '</tr>';
     for (var i = 0; i < coilCount; i++) {
-      html += '<tr><th>C' + (i+1) + '</th>';
+      html += '<tr><th>' + coils[i].name + '</th>';
       for (var j = 0; j < coilCount; j++) {
         var cls = (i === j) ? 'diag' : '';
         html += '<td class="' + cls + '">' + (M[i][j]*1e6).toFixed(2) + '</td>';
@@ -2497,9 +2530,9 @@
     }
     html += '</table></div>';
 
-    // Eigenvalues / total energy info
+    // Info
     html += '<div style="font-size:0.78rem;color:var(--text-tertiary);margin-top:8px;">';
-    html += '对角线 = 自感, 非对角线 = 互感（对称矩阵）';
+    html += '自感 ∝ N²，互感 ∝ N₁·N₂。对角线 = 自感，非对角线 = 互感（对称矩阵）。';
     html += '</div>';
 
     document.getElementById('out-ci').innerHTML = html;
