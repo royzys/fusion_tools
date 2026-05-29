@@ -735,39 +735,53 @@
       white-space: nowrap;
       text-align: center;
     }
-    .coil-actions button {
+    .coil-actions {
+      white-space: nowrap;
+      text-align: center;
+    }
+    .btn-mirror {
       display: inline-block;
-      width: 22px;
-      height: 22px;
-      padding: 0;
-      margin: 0 1px;
+      padding: 3px 10px;
       border: 1px solid var(--input-border);
       border-radius: 4px;
       background: var(--input-bg);
       color: var(--text-secondary);
-      font-size: 0.75rem;
-      line-height: 20px;
-      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 600;
+      line-height: 1.5;
       cursor: pointer;
       transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
-    .coil-actions button:hover {
+    .btn-mirror:hover {
       background: var(--accent-subtle);
       color: var(--text);
       border-color: var(--accent-light);
     }
-    .coil-actions button:active {
-      transform: scale(0.93);
-    }
-    .btn-mirror {
-      font-size: 0.72rem !important;
-      font-weight: 600;
+    .btn-mirror:active {
+      transform: scale(0.95);
     }
 
     .coil-input-table td.coil-label {
       font-weight: 600;
       color: var(--text-secondary);
       background: #f5f3ed;
+    }
+
+    .coil-input-table tbody tr {
+      cursor: grab;
+    }
+    .coil-input-table tbody tr:active {
+      cursor: grabbing;
+    }
+    .coil-input-table tbody tr.dragging {
+      opacity: 0.35;
+      outline: 2px dashed var(--accent-light);
+      outline-offset: -1px;
+    }
+    .coil-input-table tbody tr.drop-target {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      background: #f5f0e8;
     }
 
     /* Matrix output */
@@ -1153,8 +1167,12 @@
                 <button class="btn-coil primary" onclick="addCoilRow()">＋ 添加线圈</button>
                 <button class="btn-coil danger" onclick="removeCoilRow()">－ 移除最后</button>
                 <button class="btn-coil primary" onclick="calcCoilInductance()" style="margin-left:auto;">📊 计算电感矩阵</button>
+                <button class="btn-coil primary" onclick="downloadMatrixCSV()" title="下载电感矩阵为 CSV (含线圈参数)">⭳ CSV</button>
               </div>
 
+              <div style="font-size:0.76rem;color:var(--text-tertiary);margin-bottom:6px;">
+                💡 支持从 Excel / 电子表格选中后 Ctrl+V 粘贴：<code>名称	R	Z	ΔR	ΔZ	匝数N	截面形状</code>
+              </div>
               <div class="coil-input-wrapper">
               <table class="coil-input-table" id="coil-table">
                 <thead>
@@ -2311,7 +2329,25 @@
   var coilCount = 0;
 
   function initCoilRows() {
-    // Default: 2 coils (a PF coil pair)
+    // 优先从 localStorage 恢复
+    var saved = loadCoilData();
+    if (saved && saved.length > 0) {
+      for (var i = 0; i < saved.length && i < MAX_COILS; i++) {
+        var d = saved[i];
+        addCoilRow({
+          name:  d.name || ('C' + (i+1)),
+          R:     d.R,
+          Z:     d.Z,
+          dR:    d.dR,
+          dZ:    d.dZ,
+          N:     parseInt(d.N) || 1,
+          shape: (d.shape === 'circ') ? 'circ' : 'rect'
+        });
+      }
+      return;
+    }
+
+    // 默认示例: 一对 PF 线圈 + CS 线圈
     var defaults = [
       { name:'PF1', R:2.0, Z:-1.5, dR:0.3, dZ:0.3, N:8, shape:'rect' },
       { name:'PF2', R:2.0, Z: 1.5, dR:0.3, dZ:0.3, N:8, shape:'rect' },
@@ -2324,12 +2360,13 @@
    *  prefill: 预设值对象 { name, R, Z, dR, dZ, N, shape }
    *  insertBeforeIndex: 非负时在该索引前插入; 否则追加到末尾
    * ================================================================ */
-  function addCoilRow(prefill, insertBeforeIndex) {
+  function addCoilRow(prefill) {
     if (coilCount >= MAX_COILS) return;
     var idx = coilCount;
     var tbody = document.getElementById('coil-tbody');
     var tr = document.createElement('tr');
     tr.id = 'coil-row-' + idx;
+    tr.draggable = true;
 
     var d = prefill || { name:'', R:'', Z:'', dR:'', dZ:'', N:1, shape:'rect' };
     var defaultName = d.name !== '' ? d.name : 'C' + (idx + 1);
@@ -2353,18 +2390,13 @@
       '<td><input type="number" step="1" min="1" id="ci-N-' + idx + '" value="' + (d.N||1) + '" style="width:56px;"></td>' +
       '<td><select id="ci-shape-' + idx + '">' + selHtml + '</select></td>' +
       '<td class="coil-actions">' +
-        '<button class="btn-move-up" onclick="moveCoilUp(' + idx + ')" title="上移">↑</button>' +
-        '<button class="btn-move-down" onclick="moveCoilDown(' + idx + ')" title="下移">↓</button>' +
-        '<button class="btn-mirror" onclick="mirrorCoil(' + idx + ')" title="Z取反镜像拷贝">镜</button>' +
+        '<button class="btn-mirror" onclick="mirrorCoil(' + idx + ')" title="Z取反镜像拷贝 (追加到末尾)">⤴ 镜像</button>' +
       '</td>';
 
-    if (insertBeforeIndex !== undefined && insertBeforeIndex < tbody.children.length) {
-      tbody.insertBefore(tr, tbody.children[insertBeforeIndex]);
-    } else {
-      tbody.appendChild(tr);
-    }
+    tbody.appendChild(tr);
     coilCount++;
     renumberCoilRows();
+    saveCoilData();
   }
 
   /* ---- 重新编号所有线圈行 (调整 DOM ID / label / 按钮 onclick) ---- */
@@ -2385,12 +2417,8 @@
           el.id = 'ci-' + parts[1] + '-' + i;
         }
       });
-      // 更新按钮 onclick
-      var upBtn = row.querySelector('.btn-move-up');
-      var downBtn = row.querySelector('.btn-move-down');
+      // 更新镜像按钮 onclick
       var mirrorBtn = row.querySelector('.btn-mirror');
-      if (upBtn) upBtn.setAttribute('onclick', 'moveCoilUp(' + i + ')');
-      if (downBtn) downBtn.setAttribute('onclick', 'moveCoilDown(' + i + ')');
       if (mirrorBtn) mirrorBtn.setAttribute('onclick', 'mirrorCoil(' + i + ')');
     }
     coilCount = rows.length;
@@ -2401,26 +2429,223 @@
     var tbody = document.getElementById('coil-tbody');
     tbody.removeChild(tbody.lastElementChild);
     renumberCoilRows();
+    saveCoilData();
+    calcCoilInductance();
   }
 
-  /* ---- 上移 ---- */
-  function moveCoilUp(idx) {
-    if (idx <= 0) return;
+  /* ==================================================================
+   *  Drag & Drop 拖拽排序
+   * ================================================================ */
+  var _dragSrcIdx = null;
+
+  function initDragDrop() {
     var tbody = document.getElementById('coil-tbody');
-    var row = document.getElementById('coil-row-' + idx);
-    var prev = document.getElementById('coil-row-' + (idx - 1));
-    tbody.insertBefore(row, prev);
-    renumberCoilRows();
+
+    tbody.addEventListener('dragstart', function(e) {
+      var row = e.target.closest('tr');
+      if (!row) return;
+      _dragSrcIdx = parseInt(row.id.split('-')[2]);
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    tbody.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      var row = e.target.closest('tr');
+      if (!row) return;
+      row.classList.add('drop-target');
+    });
+
+    tbody.addEventListener('dragleave', function(e) {
+      var row = e.target.closest('tr');
+      if (!row) return;
+      row.classList.remove('drop-target');
+    });
+
+    tbody.addEventListener('drop', function(e) {
+      e.preventDefault();
+      var row = e.target.closest('tr');
+      if (!row || _dragSrcIdx === null) return;
+      var targetIdx = parseInt(row.id.split('-')[2]);
+      if (targetIdx === _dragSrcIdx) {
+        row.classList.remove('drop-target');
+        return;
+      }
+      var srcRow = document.getElementById('coil-row-' + _dragSrcIdx);
+      if (targetIdx > _dragSrcIdx) {
+        tbody.insertBefore(srcRow, row.nextSibling);
+      } else {
+        tbody.insertBefore(srcRow, row);
+      }
+      renumberCoilRows();
+      saveCoilData();
+      calcCoilInductance();
+      row.classList.remove('drop-target');
+      [].forEach.call(document.querySelectorAll('.dragging'), function(r) { r.classList.remove('dragging'); });
+      _dragSrcIdx = null;
+    });
+
+    tbody.addEventListener('dragend', function() {
+      [].forEach.call(document.querySelectorAll('.dragging, .drop-target'), function(r) {
+        r.classList.remove('dragging', 'drop-target');
+      });
+      _dragSrcIdx = null;
+    });
   }
 
-  /* ---- 下移 ---- */
-  function moveCoilDown(idx) {
+  /* ==================================================================
+   *  从 Excel / 电子表格粘贴
+   *  格式: 名称(制表符)R(制表符)Z(制表符)ΔR(制表符)ΔZ(制表符)匝数N(制表符)[形状]
+   * ================================================================ */
+  function initTablePaste() {
     var tbody = document.getElementById('coil-tbody');
-    var row = document.getElementById('coil-row-' + idx);
-    var next = row.nextElementSibling;
-    if (!next) return;
-    tbody.insertBefore(next, row);
-    renumberCoilRows();
+    tbody.addEventListener('paste', function(e) {
+      // 短暂延迟让 text 获取完成
+      setTimeout(function() {
+        pasteFromClipboard();
+      }, 10);
+    });
+  }
+
+  function pasteFromClipboard() {
+    // 从输入框的值变化检测粘贴 (更可靠的方式: 监听全局粘贴)
+    // 这里使用全局 paste 监听
+  }
+
+  // 全局粘贴检测 (可以在表格聚焦时粘贴整张表)
+  document.addEventListener('paste', function(e) {
+    var active = document.activeElement;
+    var tbody = document.getElementById('coil-tbody');
+    if (!tbody || !active || !tbody.contains(active)) return;
+    var text = (e.clipboardData || window.clipboardData).getData('text');
+    if (!text) return;
+    var lines = text.trim().split('\n');
+    if (lines.length < 1) return;
+    // 尝试解析: 至少 6 列, 含制表符
+    var parsed = [];
+    for (var i = 0; i < lines.length; i++) {
+      var cols = lines[i].split('\t');
+      if (cols.length < 6 && lines[i].indexOf(',') >= 0) cols = lines[i].split(',');
+      if (cols.length >= 6) {
+        parsed.push(cols);
+      }
+    }
+    if (parsed.length === 0) return;
+    e.preventDefault();
+    // 清空并填充
+    tbody.innerHTML = '';
+    coilCount = 0;
+    var max = Math.min(parsed.length, MAX_COILS);
+    for (var i = 0; i < max; i++) {
+      var r = parsed[i];
+      addCoilRow({
+        name:  (r[0] || '').trim() || ('C' + (i+1)),
+        R:     parseFloat(r[1]) || '',
+        Z:     parseFloat(r[2]) || '',
+        dR:    parseFloat(r[3]) || '',
+        dZ:    parseFloat(r[4]) || '',
+        N:     parseInt(r[5]) || 1,
+        shape: (r[6] && r[6].trim() === 'circ') ? 'circ' : 'rect'
+      }, true);  // true = skipSave
+    }
+    saveCoilData();
+    calcCoilInductance();
+  });
+
+  /* ==================================================================
+   *  电感矩阵 → CSV 下载
+   * ================================================================ */
+  function downloadMatrixCSV() {
+    if (coilCount === 0) { alert('没有线圈数据'); return; }
+    var coilData = [];
+    for (var i = 0; i < coilCount; i++) {
+      var name  = document.getElementById('ci-name-' + i).value.trim() || ('C' + (i+1));
+      var R  = parseFloat(document.getElementById('ci-R-' + i).value);
+      var Z  = parseFloat(document.getElementById('ci-Z-' + i).value);
+      var dR = parseFloat(document.getElementById('ci-dR-' + i).value);
+      var dZ = parseFloat(document.getElementById('ci-dZ-' + i).value);
+      var N  = parseInt(document.getElementById('ci-N-' + i).value) || 1;
+      var shape = document.getElementById('ci-shape-' + i).value;
+      if (isNaN(R) || R <= 0 || isNaN(dR) || dR <= 0 || isNaN(dZ) || dZ <= 0 || N < 1) {
+        alert('线圈 "' + name + '" 参数无效, 无法导出 CSV'); return;
+      }
+      coilData.push({ name:name, R:R, Z:Z, dR:dR, dZ:dZ, N:N, shape:shape });
+    }
+
+    var n = coilData.length;
+    var L1 = coilData.map(function(c) { return coilSelfInductance(c.R, c.dR, c.dZ, c.shape); });
+    var Lself = L1.map(function(v,i) { return v * coilData[i].N * coilData[i].N; });
+
+    var M = [];
+    for (var i = 0; i < n; i++) {
+      M[i] = [];
+      for (var j = 0; j < n; j++) {
+        if (i === j) { M[i][j] = Lself[i]; }
+        else if (j > i) {
+          var M1 = coilMutualInductance(coilData[i].R, coilData[i].Z, coilData[j].R, coilData[j].Z,
+            coilData[i].dR, coilData[i].dZ, coilData[j].dR, coilData[j].dZ, coilData[i].shape, coilData[j].shape);
+          M[i][j] = M1 * coilData[i].N * coilData[j].N;
+        } else {
+          M[i][j] = M[j][i];
+        }
+      }
+    }
+
+    // CSV: 电感矩阵
+    var csv = '线圈名';
+    for (var j = 0; j < n; j++) csv += ',' + coilData[j].name;
+    csv += '\n';
+    for (var i = 0; i < n; i++) {
+      csv += coilData[i].name;
+      for (var j = 0; j < n; j++) csv += ',' + (M[i][j] * 1e6).toFixed(6);
+      csv += '\n';
+    }
+    // CSV: 线圈参数
+    csv += '\n名称,R(m),Z(m),ΔR(m),ΔZ(m),匝数N,截面形状,自感(μH)\n';
+    for (var i = 0; i < n; i++) {
+      csv += coilData[i].name + ',' + coilData[i].R + ',' + coilData[i].Z + ','
+        + coilData[i].dR + ',' + coilData[i].dZ + ',' + coilData[i].N + ','
+        + (coilData[i].shape === 'circ' ? '圆形' : '矩形') + ',' + (Lself[i]*1e6).toFixed(6) + '\n';
+    }
+
+    var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'inductance_matrix.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /* ==================================================================
+   *  localStorage 持久化: 线圈参数不因刷新/切页面丢失
+   * ================================================================ */
+  var STORAGE_KEY = 'fusion_tools_coils';
+
+  function saveCoilData() {
+    var data = [];
+    for (var i = 0; i < coilCount; i++) {
+      data.push({
+        name:  document.getElementById('ci-name-' + i).value.trim(),
+        R:     document.getElementById('ci-R-' + i).value,
+        Z:     document.getElementById('ci-Z-' + i).value,
+        dR:    document.getElementById('ci-dR-' + i).value,
+        dZ:    document.getElementById('ci-dZ-' + i).value,
+        N:     document.getElementById('ci-N-' + i).value || '1',
+        shape: document.getElementById('ci-shape-' + i).value
+      });
+    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+  }
+
+  function loadCoilData() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return null;
   }
 
   /* ---- 镜像拷贝: 后缀 -m, Z 取反 ---- */
@@ -2434,7 +2659,7 @@
     var N     = parseInt(document.getElementById('ci-N-' + idx).value) || 1;
     var shape = document.getElementById('ci-shape-' + idx).value;
 
-    // 在原始行后面插入镜像
+    // 追加到末尾
     addCoilRow({
       name: name + '-m',
       R:    R,
@@ -2443,7 +2668,9 @@
       dZ:   dZ,
       N:    N,
       shape: shape
-    }, idx + 1);
+    });
+    saveCoilData();
+    calcCoilInductance();
   }
 
   /* ---- Elliptic integrals K(k) and E(k) ---- */
@@ -2782,6 +3009,7 @@
     renderComparisonTable();
     recalc();
     initCoilRows();
+    initDragDrop();
     calcCoilInductance();
 
     // Wire up tab buttons
@@ -2798,6 +3026,16 @@
     paramInputs.forEach(function(el) {
       el.addEventListener('input', recalc);
       el.addEventListener('change', recalc);
+    });
+
+    // 线圈表格输入变化自动保存 + 重算
+    document.getElementById('coil-tbody').addEventListener('input', function(e) {
+      saveCoilData();
+      calcCoilInductance();
+    });
+    document.getElementById('coil-tbody').addEventListener('change', function(e) {
+      saveCoilData();
+      calcCoilInductance();
     });
   });
   </script>
