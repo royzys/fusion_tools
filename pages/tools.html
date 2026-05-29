@@ -730,6 +730,40 @@
       overflow-x: auto;
     }
 
+    /* ---- 操作按钮 ---- */
+    .coil-actions {
+      white-space: nowrap;
+      text-align: center;
+    }
+    .coil-actions button {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      margin: 0 1px;
+      border: 1px solid var(--input-border);
+      border-radius: 4px;
+      background: var(--input-bg);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      line-height: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .coil-actions button:hover {
+      background: var(--accent-subtle);
+      color: var(--text);
+      border-color: var(--accent-light);
+    }
+    .coil-actions button:active {
+      transform: scale(0.93);
+    }
+    .btn-mirror {
+      font-size: 0.72rem !important;
+      font-weight: 600;
+    }
+
     .coil-input-table td.coil-label {
       font-weight: 600;
       color: var(--text-secondary);
@@ -1125,7 +1159,7 @@
               <table class="coil-input-table" id="coil-table">
                 <thead>
                   <tr>
-                    <th>#</th>
+                    <th style="width:38px;">#</th>
                     <th>名称</th>
                     <th>R (m)</th>
                     <th>Z (m)</th>
@@ -1133,6 +1167,7 @@
                     <th>ΔZ (m)</th>
                     <th>匝数 N</th>
                     <th>截面形状</th>
+                    <th style="width:74px;">操作</th>
                   </tr>
                 </thead>
                 <tbody id="coil-tbody">
@@ -2285,7 +2320,11 @@
     defaults.forEach(function(d) { addCoilRow(d); });
   }
 
-  function addCoilRow(prefill) {
+  /* ---- 新增线圈行 ----
+   *  prefill: 预设值对象 { name, R, Z, dR, dZ, N, shape }
+   *  insertBeforeIndex: 非负时在该索引前插入; 否则追加到末尾
+   * ================================================================ */
+  function addCoilRow(prefill, insertBeforeIndex) {
     if (coilCount >= MAX_COILS) return;
     var idx = coilCount;
     var tbody = document.getElementById('coil-tbody');
@@ -2312,16 +2351,99 @@
       '<td><input type="number" step="any" id="ci-dR-' + idx + '" value="' + (d.dR!==''?d.dR:'') + '"></td>' +
       '<td><input type="number" step="any" id="ci-dZ-' + idx + '" value="' + (d.dZ!==''?d.dZ:'') + '"></td>' +
       '<td><input type="number" step="1" min="1" id="ci-N-' + idx + '" value="' + (d.N||1) + '" style="width:56px;"></td>' +
-      '<td><select id="ci-shape-' + idx + '">' + selHtml + '</select></td>';
-    tbody.appendChild(tr);
+      '<td><select id="ci-shape-' + idx + '">' + selHtml + '</select></td>' +
+      '<td class="coil-actions">' +
+        '<button class="btn-move-up" onclick="moveCoilUp(' + idx + ')" title="上移">↑</button>' +
+        '<button class="btn-move-down" onclick="moveCoilDown(' + idx + ')" title="下移">↓</button>' +
+        '<button class="btn-mirror" onclick="mirrorCoil(' + idx + ')" title="Z取反镜像拷贝">镜</button>' +
+      '</td>';
+
+    if (insertBeforeIndex !== undefined && insertBeforeIndex < tbody.children.length) {
+      tbody.insertBefore(tr, tbody.children[insertBeforeIndex]);
+    } else {
+      tbody.appendChild(tr);
+    }
     coilCount++;
+    renumberCoilRows();
+  }
+
+  /* ---- 重新编号所有线圈行 (调整 DOM ID / label / 按钮 onclick) ---- */
+  function renumberCoilRows() {
+    var tbody = document.getElementById('coil-tbody');
+    var rows = tbody.children;
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      row.id = 'coil-row-' + i;
+      // 更新序号标签
+      var label = row.querySelector('.coil-label');
+      if (label) label.textContent = i + 1;
+      // 更新所有输入框和 select 的 ID
+      row.querySelectorAll('[id]').forEach(function(el) {
+        var parts = el.id.split('-');
+        // id 格式: ci-{type}-{oldIndex}
+        if (parts.length >= 3 && parts[0] === 'ci') {
+          el.id = 'ci-' + parts[1] + '-' + i;
+        }
+      });
+      // 更新按钮 onclick
+      var upBtn = row.querySelector('.btn-move-up');
+      var downBtn = row.querySelector('.btn-move-down');
+      var mirrorBtn = row.querySelector('.btn-mirror');
+      if (upBtn) upBtn.setAttribute('onclick', 'moveCoilUp(' + i + ')');
+      if (downBtn) downBtn.setAttribute('onclick', 'moveCoilDown(' + i + ')');
+      if (mirrorBtn) mirrorBtn.setAttribute('onclick', 'mirrorCoil(' + i + ')');
+    }
+    coilCount = rows.length;
   }
 
   function removeCoilRow() {
     if (coilCount <= 0) return;
-    coilCount--;
     var tbody = document.getElementById('coil-tbody');
-    tbody.removeChild(document.getElementById('coil-row-' + coilCount));
+    tbody.removeChild(tbody.lastElementChild);
+    renumberCoilRows();
+  }
+
+  /* ---- 上移 ---- */
+  function moveCoilUp(idx) {
+    if (idx <= 0) return;
+    var tbody = document.getElementById('coil-tbody');
+    var row = document.getElementById('coil-row-' + idx);
+    var prev = document.getElementById('coil-row-' + (idx - 1));
+    tbody.insertBefore(row, prev);
+    renumberCoilRows();
+  }
+
+  /* ---- 下移 ---- */
+  function moveCoilDown(idx) {
+    var tbody = document.getElementById('coil-tbody');
+    var row = document.getElementById('coil-row-' + idx);
+    var next = row.nextElementSibling;
+    if (!next) return;
+    tbody.insertBefore(next, row);
+    renumberCoilRows();
+  }
+
+  /* ---- 镜像拷贝: 后缀 -m, Z 取反 ---- */
+  function mirrorCoil(idx) {
+    if (coilCount >= MAX_COILS) return;
+    var name  = document.getElementById('ci-name-' + idx).value.trim() || 'C' + (idx + 1);
+    var R     = document.getElementById('ci-R-' + idx).value;
+    var Z     = parseFloat(document.getElementById('ci-Z-' + idx).value) || 0;
+    var dR    = document.getElementById('ci-dR-' + idx).value;
+    var dZ    = document.getElementById('ci-dZ-' + idx).value;
+    var N     = parseInt(document.getElementById('ci-N-' + idx).value) || 1;
+    var shape = document.getElementById('ci-shape-' + idx).value;
+
+    // 在原始行后面插入镜像
+    addCoilRow({
+      name: name + '-m',
+      R:    R,
+      Z:    -Z,
+      dR:   dR,
+      dZ:   dZ,
+      N:    N,
+      shape: shape
+    }, idx + 1);
   }
 
   /* ---- Elliptic integrals K(k) and E(k) ---- */
