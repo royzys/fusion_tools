@@ -2358,9 +2358,9 @@
 
   /* ---- 新增线圈行 ----
    *  prefill: 预设值对象 { name, R, Z, dR, dZ, N, shape }
-   *  insertBeforeIndex: 非负时在该索引前插入; 否则追加到末尾
+   *  noSave: true 时跳过 localStorage 写入 (批量操作时使用)
    * ================================================================ */
-  function addCoilRow(prefill) {
+  function addCoilRow(prefill, noSave) {
     if (coilCount >= MAX_COILS) return;
     var idx = coilCount;
     var tbody = document.getElementById('coil-tbody');
@@ -2396,7 +2396,7 @@
     tbody.appendChild(tr);
     coilCount++;
     renumberCoilRows();
-    saveCoilData();
+    if (!noSave) saveCoilData();
   }
 
   /* ---- 重新编号所有线圈行 (调整 DOM ID / label / 按钮 onclick) ---- */
@@ -2494,63 +2494,63 @@
   }
 
   /* ==================================================================
-   *  从 Excel / 电子表格粘贴
+   *  从 Excel / 电子表格粘贴 (capture phase, 在 input 处理前拦截)
    *  格式: 名称(制表符)R(制表符)Z(制表符)ΔR(制表符)ΔZ(制表符)匝数N(制表符)[形状]
    * ================================================================ */
   function initTablePaste() {
-    var tbody = document.getElementById('coil-tbody');
-    tbody.addEventListener('paste', function(e) {
-      // 短暂延迟让 text 获取完成
-      setTimeout(function() {
-        pasteFromClipboard();
-      }, 10);
-    });
-  }
+    // 在 capture phase 监听, 抢在 input 自身的 paste 处理之前执行
+    document.addEventListener('paste', function(e) {
+      var active = document.activeElement;
+      var tbody = document.getElementById('coil-tbody');
+      if (!tbody || !active || !tbody.contains(active)) return;
 
-  function pasteFromClipboard() {
-    // 从输入框的值变化检测粘贴 (更可靠的方式: 监听全局粘贴)
-    // 这里使用全局 paste 监听
-  }
+      var text = (e.clipboardData || window.clipboardData).getData('text');
+      if (!text) return;
 
-  // 全局粘贴检测 (可以在表格聚焦时粘贴整张表)
-  document.addEventListener('paste', function(e) {
-    var active = document.activeElement;
-    var tbody = document.getElementById('coil-tbody');
-    if (!tbody || !active || !tbody.contains(active)) return;
-    var text = (e.clipboardData || window.clipboardData).getData('text');
-    if (!text) return;
-    var lines = text.trim().split('\n');
-    if (lines.length < 1) return;
-    // 尝试解析: 至少 6 列, 含制表符
-    var parsed = [];
-    for (var i = 0; i < lines.length; i++) {
-      var cols = lines[i].split('\t');
-      if (cols.length < 6 && lines[i].indexOf(',') >= 0) cols = lines[i].split(',');
-      if (cols.length >= 6) {
-        parsed.push(cols);
+      var lines = text.trim().split('\n');
+      if (lines.length < 1) return;
+
+      // 尝试解析表格数据: 必须至少 6 列且含制表符
+      var parsed = [];
+      var hasTab = false;
+      for (var i = 0; i < lines.length; i++) {
+        var cols = lines[i].split('\t');
+        if (cols.length > 1) hasTab = true;
+        if (cols.length < 6) {
+          // 尝试逗号分隔
+          cols = lines[i].split(',');
+        }
+        if (cols.length >= 6) {
+          parsed.push(cols);
+        }
       }
-    }
-    if (parsed.length === 0) return;
-    e.preventDefault();
-    // 清空并填充
-    tbody.innerHTML = '';
-    coilCount = 0;
-    var max = Math.min(parsed.length, MAX_COILS);
-    for (var i = 0; i < max; i++) {
-      var r = parsed[i];
-      addCoilRow({
-        name:  (r[0] || '').trim() || ('C' + (i+1)),
-        R:     parseFloat(r[1]) || '',
-        Z:     parseFloat(r[2]) || '',
-        dR:    parseFloat(r[3]) || '',
-        dZ:    parseFloat(r[4]) || '',
-        N:     parseInt(r[5]) || 1,
-        shape: (r[6] && r[6].trim() === 'circ') ? 'circ' : 'rect'
-      }, true);  // true = skipSave
-    }
-    saveCoilData();
-    calcCoilInductance();
-  });
+      // 只有一行且不含制表符 → 普通粘贴, 不拦截
+      if (parsed.length === 0 || (parsed.length === 1 && !hasTab)) return;
+
+      // 拦截! 阻止 input 收到粘贴内容
+      e.stopPropagation();
+      e.preventDefault();
+
+      // 清空并填充
+      tbody.innerHTML = '';
+      coilCount = 0;
+      var max = Math.min(parsed.length, MAX_COILS);
+      for (var i = 0; i < max; i++) {
+        var r = parsed[i];
+        addCoilRow({
+          name:  (r[0] || '').trim() || ('C' + (i+1)),
+          R:     parseFloat(r[1]) || '',
+          Z:     parseFloat(r[2]) || '',
+          dR:    parseFloat(r[3]) || '',
+          dZ:    parseFloat(r[4]) || '',
+          N:     parseInt(r[5]) || 1,
+          shape: (r[6] && r[6].trim() === 'circ') ? 'circ' : 'rect'
+        }, true);  // noSave = true, 批量结束一次性保存
+      }
+      saveCoilData();
+      calcCoilInductance();
+    }, true);  // capture phase
+  }
 
   /* ==================================================================
    *  电感矩阵 → CSV 下载
@@ -3010,6 +3010,7 @@
     recalc();
     initCoilRows();
     initDragDrop();
+    initTablePaste();
     calcCoilInductance();
 
     // Wire up tab buttons
